@@ -22,7 +22,7 @@ public class OpenAIIntegration {
         }
 
         JsonObject payload = new JsonObject();
-        payload.addProperty("model", "gpt-4-turbo");
+        payload.addProperty("model", "gpt-4o");
         
         JsonArray messages = new JsonArray();
         
