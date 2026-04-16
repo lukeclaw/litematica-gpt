@@ -30,7 +30,7 @@ public class OpenAISchematicDSLParser {
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
-            if (line.isEmpty() || (line.startsWith("#") && !inPalette && !inLayer)) continue;
+            if (line.isEmpty()) continue;
 
             if (line.equals("end_palette")) {
                 inPalette = false;
@@ -69,6 +69,8 @@ public class OpenAISchematicDSLParser {
                 layerZ++;
                 continue;
             }
+
+            if (line.startsWith("#")) continue;
 
             String[] tokens = line.split("\\s+");
             if (tokens.length == 0) continue;
