@@ -64,6 +64,8 @@ public class GuiMainMenu extends GuiBase
         y += 22;
 
         this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.TASK_MANAGER);
+        y += 22;
+        this.createChangeMenuButton(x, y, width, ButtonListenerChangeMenu.ButtonType.AI_GENERATOR);
 
         if (Configs.Generic.UNHIDE_SCHEMATIC_PROJECTS.getBooleanValue())
         {
@@ -154,6 +156,9 @@ public class GuiMainMenu extends GuiBase
                 case TASK_MANAGER:
                     gui = new GuiTaskManager();
                     break;
+                case AI_GENERATOR:
+                    gui = new GuiOpenAISchematic();
+                    break;
                 case SCHEMATIC_PROJECTS_MANAGER:
                     DataManager.getSchematicProjectsManager().openSchematicProjectsGui();
                     return;
@@ -182,6 +187,8 @@ public class GuiMainMenu extends GuiBase
             SCHEMATIC_MANAGER           ("litematica.gui.button.change_menu.schematic_manager", ButtonIcons.SCHEMATIC_MANAGER),
             // Open the Task Manager
             TASK_MANAGER                ("litematica.gui.button.change_menu.task_manager", ButtonIcons.TASK_MANAGER),
+            // Generate AI Schematic via LLM
+            AI_GENERATOR                ("Generate AI Schematic", null),
             // Open the Schematic Projects browser
             SCHEMATIC_PROJECTS_MANAGER  ("litematica.gui.button.change_menu.schematic_projects_manager", ButtonIcons.SCHEMATIC_PROJECTS),
             // In-game Configuration GUI
