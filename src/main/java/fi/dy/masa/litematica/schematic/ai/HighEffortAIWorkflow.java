@@ -51,7 +51,8 @@ public class HighEffortAIWorkflow {
         
         String plannerPrompt = "You are an expert Minecraft Architect. Semantically break down the following request into primitive geometric components.\n" +
                                "You MUST output raw JSON format with a 'parts' array. Limit to max 5 parts.\n" +
-                               "Example:\n{\n \"parts\": [\n  {\"name\": \"Left Leg\", \"bounds\": [0,0,0, 2,5,2], \"instructions\": \"make it out of oak logs\"}\n ]\n}\n\nRequest: " + prompt;
+                               "If parts physically intersect (like a leg joining a torso), explicitly define identical 'connections' interface coordinates in *both* intersecting parts so they fuse properly.\n" +
+                               "Example:\n{\n \"parts\": [\n  {\"name\": \"Left Leg\", \"bounds\": [0,0,0, 4,5,4], \"instructions\": \"make it out of oak logs\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2]\"}]},\n  {\"name\": \"Torso\", \"bounds\": [0,5,0, 6,10,6], \"instructions\": \"Build torso\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2]\"}]}\n ]\n}\n\nRequest: " + prompt;
 
         this.activeFuture = sendApiRequest(plannerPrompt, "gpt-4o", null);
         this.activeFuture.thenAccept(response -> {
@@ -96,6 +97,20 @@ public class HighEffortAIWorkflow {
         JsonArray bounds = part.getAsJsonArray("bounds");
         String instructions = part.get("instructions").getAsString();
         
+        String connectionsText = "";
+        if (part.has("connections") && part.get("connections").isJsonArray()) {
+            JsonArray conns = part.getAsJsonArray("connections");
+            if (conns.size() > 0) {
+                connectionsText = "\nCRITICAL Topolgy Interfaces: You MUST physically place blocks touching these exact coordinates to satisfy integration with other parts:\n";
+                for (int i = 0; i < conns.size(); i++) {
+                    JsonObject c = conns.get(i).getAsJsonObject();
+                    if (c.has("name") && c.has("coord")) {
+                        connectionsText += "- " + c.get("name").getAsString() + " at " + c.get("coord").getAsString() + "\n";
+                    }
+                }
+            }
+        }
+        
         int x1 = bounds.get(0).getAsInt();
         int y1 = bounds.get(1).getAsInt();
         int z1 = bounds.get(2).getAsInt();
@@ -107,7 +122,7 @@ public class HighEffortAIWorkflow {
 
         String systemInstruction = "You are a sub-agent generating a Minecraft schematic part: '" + partName + "'.\n" +
             "The bounds are: from ("+x1+","+y1+","+z1+") to ("+x2+","+y2+","+z2+").\n" +
-            "Specific instructions: " + instructions + "\n\n" +
+            "Specific instructions: " + instructions + "\n" + connectionsText + "\n" +
             "The DSL grammar ONLY supports these literal commands:\n" +
             "1) palette\\n[char] = [minecraft_id]\\nend_palette\\n\n" +
             "2) layer_y [Y] [offsetX] [offsetZ]\\n(ascii map)\\nend_layer\\n\n" +
