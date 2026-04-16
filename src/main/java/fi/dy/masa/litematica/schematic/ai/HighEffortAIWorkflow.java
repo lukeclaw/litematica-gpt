@@ -32,6 +32,7 @@ public class HighEffortAIWorkflow {
     private String originalPrompt;
     private String schemName;
     private JsonObject globalPalette = null;
+    private JsonArray globalBounds = null;
     private JsonArray partsPlan = null;
     private AtomicInteger nextPartIndex = new AtomicInteger(0);
     private AtomicInteger completedPartsCount = new AtomicInteger(0);
@@ -54,6 +55,7 @@ public class HighEffortAIWorkflow {
         this.nextPartIndex.set(0);
         this.completedPartsCount.set(0);
         this.globalPalette = null;
+        this.globalBounds = null;
         this.partsPlan = null;
         this.activeFutures.clear();
         
@@ -62,10 +64,11 @@ public class HighEffortAIWorkflow {
         callback.onProgress("Generating Master Plan... Please Wait.");
         
         String plannerPrompt = "You are an expert Minecraft Architect. Semantically break down the following request into primitive geometric components.\n" +
-                               "You MUST output raw JSON format with a 'global_palette' object (mapping conceptual materials to specific minecraft_ids) and a 'parts' array. Break it down into as many logical parts as necessary for high detail.\n" +
+                               "You MUST output raw JSON format with a 'global_bounds' array [x1,y1,z1, x2,y2,z2], a 'global_palette' object, and a 'parts' array. Break it down into as many logical parts as necessary for high detail.\n" +
+                               "CRITICAL: Prioritize 'Major Structural Assemblies' (e.g., Head, Torso, Limbs, Hull) over minor features. DO NOT separate tiny details like 'eyes' or 'buttons' into their own parts; instead, include them in the instructions of the larger parent assembly. Target 5-8 high-quality parts.\n" +
                                "Consistency is CRITICAL. Define a shared 'global_palette' for the entire project so all sub-agents use identical blocks for the same features.\n" +
                                "If parts physically intersect (like a leg joining a torso), explicitly define identical 'connections' interface coordinates in *both* intersecting parts so they fuse properly.\n" +
-                               "Example:\n{\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Left Leg\", \"bounds\": [0,0,0, 4,5,4], \"instructions\": \"make it out of oak logs\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2]\"}]},\n  {\"name\": \"Torso\", \"bounds\": [0,5,0, 6,10,6], \"instructions\": \"Build torso\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2]\"}]}\n ]\n}\n\nRequest: " + prompt;
+                               "Example:\n{\n \"global_bounds\": [0,0,0, 10,20,10],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Left Leg\", \"bounds\": [0,0,0, 4,5,4], \"instructions\": \"make it out of oak logs\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2]\"}]},\n  {\"name\": \"Torso\", \"bounds\": [0,5,0, 6,10,6], \"instructions\": \"Build torso with detail\", \"connections\": [{\"name\": [\"torso_socket\", \"head_socket\"], \"coord\": [\"[2,5,2]\", \"[3,10,3]\"]}]}\n ]\n}\n\nRequest: " + prompt;
 
         CompletableFuture<HttpResponse<String>> plannerFuture = sendApiRequest(plannerPrompt, "gpt-5.4-mini", null);
         this.activeFutures.add(plannerFuture);
@@ -92,9 +95,10 @@ public class HighEffortAIWorkflow {
                 
                 JsonObject planJson = JsonParser.parseString(content).getAsJsonObject();
                 this.globalPalette = planJson.getAsJsonObject("global_palette");
+                this.globalBounds = planJson.getAsJsonArray("global_bounds");
                 this.partsPlan = planJson.getAsJsonArray("parts");
                 
-                Litematica.logger.info("Master Plan generated successfully with {} parts and palette: {}.", this.partsPlan.size(), this.globalPalette);
+                Litematica.logger.info("Master Plan generated successfully with {} parts. Scale: {}.", this.partsPlan.size(), this.globalBounds);
                 
                 this.state = State.GENERATING;
                 dispatchWorkers();
@@ -151,6 +155,12 @@ public class HighEffortAIWorkflow {
         if (this.globalPalette != null) {
             paletteText = "\nPROJECT GLOBAL PALETTE (Use these materials for project-wide consistency):\n" + this.globalPalette.toString() + "\n";
         }
+
+        String scaleText = "";
+        if (this.globalBounds != null) {
+            scaleText = "\nPROJECT SCALE CONTEXT: You are building a piece of a larger structure. The TOTAL build bounds are: " + this.globalBounds.toString() + ".\n" +
+                        "Your specific part's bounds are ONLY: " + bounds.toString() + ". Ensure your part's proportions make sense relative to the total build size.\n";
+        }
         
         int x1 = bounds.get(0).getAsInt();
         int y1 = bounds.get(1).getAsInt();
@@ -162,8 +172,7 @@ public class HighEffortAIWorkflow {
         callback.onProgress("Generating: " + partName);
 
         String systemInstruction = "You are a sub-agent generating a Minecraft schematic part: '" + partName + "'.\n" +
-            "The bounds are: from ("+x1+","+y1+","+z1+") to ("+x2+","+y2+","+z2+").\n" +
-            "Specific instructions: " + instructions + "\n" + paletteText + connectionsText + "\n" +
+            "Specific instructions: " + instructions + "\n" + scaleText + paletteText + connectionsText + "\n" +
             "The DSL grammar ONLY supports these literal commands:\n" +
             "1) palette\\n[char] = [minecraft_id]\\nend_palette\\n\n" +
             "2) layer_y [Y] [offsetX] [offsetZ]\\n(ascii map)\\nend_layer\\n\n" +
