@@ -31,6 +31,8 @@ public class OpenAIIntegration {
         systemMessage.addProperty("content", "You are an AI that generates Minecraft schematics using a strict DSL format. The DSL grammar ONLY supports these literal commands:\n" +
                 "1) palette\\n[char] = [minecraft_id]\\nend_palette\\n\n" +
                 "2) layer_y [number]\\n(ascii map of characters)\\nend_layer\\n\n" +
+                "   **CRITICAL: Use '.' (dot) to represent empty space/air in ascii maps.**\n" +
+                "   **CRITICAL: Build upwards in 3D grid coordinates. You must stack multiple layer_y slices to build 3D objects.**\n" +
                 "3) set [x] [y] [z] [minecraft_id]\n" +
                 "4) fill [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
                 "5) box [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
