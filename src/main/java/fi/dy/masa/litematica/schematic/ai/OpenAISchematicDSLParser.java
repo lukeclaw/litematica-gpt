@@ -20,6 +20,8 @@ public class OpenAISchematicDSLParser {
         boolean inLayer = false;
         int currentLayerY = 0;
         int layerZ = 0;
+        int layerOffsetX = 0;
+        int layerOffsetZ = 0;
         
         Map<Character, BlockState> palette = new HashMap<>();
         
@@ -64,7 +66,7 @@ public class OpenAISchematicDSLParser {
                 for (int x = 0; x < line.length(); x++) {
                     char c = line.charAt(x);
                     if (c != '.' && palette.containsKey(c)) {
-                        blocks.put(new BlockPos(x, currentLayerY, layerZ), palette.get(c));
+                        blocks.put(new BlockPos(x + layerOffsetX, currentLayerY, layerZ + layerOffsetZ), palette.get(c));
                     }
                 }
                 layerZ++;
@@ -80,6 +82,13 @@ public class OpenAISchematicDSLParser {
                 } else if (cmd.equals("layer_y")) {
                     inLayer = true;
                     currentLayerY = Integer.parseInt(tokens[1]);
+                    if (tokens.length >= 4) {
+                        layerOffsetX = Integer.parseInt(tokens[2]);
+                        layerOffsetZ = Integer.parseInt(tokens[3]);
+                    } else {
+                        layerOffsetX = 0;
+                        layerOffsetZ = 0;
+                    }
                     layerZ = 0;
                 } else if (cmd.equals("set")) {
                     int x = Integer.parseInt(tokens[1]);

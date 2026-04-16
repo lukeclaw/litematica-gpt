@@ -1,6 +1,7 @@
 package fi.dy.masa.litematica.gui;
 
 import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.schematic.ai.HighEffortAIWorkflow;
 import fi.dy.masa.litematica.schematic.ai.OpenAIIntegration;
 import fi.dy.masa.litematica.schematic.ai.OpenAISchematicBuilder;
 import fi.dy.masa.litematica.schematic.ai.OpenAISchematicDSLParser;
@@ -17,7 +18,14 @@ public class GuiOpenAISchematic extends GuiBase {
 
     private GuiTextFieldGeneric promptField;
     private GuiTextFieldGeneric nameField;
+    private boolean useHighEffort = false;
     private boolean isGenerating = false;
+    private String statusText = "";
+    
+    private ButtonGeneric generateButton;
+    private ButtonGeneric abortButton;
+    private ButtonGeneric pauseResumeButton;
+    private ButtonGeneric highEffortToggle;
 
     public GuiOpenAISchematic() {
         this.title = "Generate AI Schematic";
@@ -39,8 +47,18 @@ public class GuiOpenAISchematic extends GuiBase {
         
         this.promptField.setFocused(true);
 
-        ButtonGeneric generateButton = new ButtonGeneric(x, y + 80, 100, 20, "Generate");
-        this.addButton(generateButton, new IButtonActionListener() {
+        this.highEffortToggle = new ButtonGeneric(x - 120, y + 80, 100, 20, "[ ] High Effort");
+        this.addButton(this.highEffortToggle, new IButtonActionListener() {
+            @Override
+            public void actionPerformedWithButton(ButtonBase button, int mouseButton) {
+                if (isGenerating) return;
+                useHighEffort = !useHighEffort;
+                highEffortToggle.setDisplayString(useHighEffort ? "[X] High Effort" : "[ ] High Effort");
+            }
+        });
+
+        this.generateButton = new ButtonGeneric(x, y + 80, 100, 20, "Generate");
+        this.addButton(this.generateButton, new IButtonActionListener() {
             @Override
             public void actionPerformedWithButton(ButtonBase button, int mouseButton) {
                 if (isGenerating) return;
@@ -53,43 +71,115 @@ public class GuiOpenAISchematic extends GuiBase {
                     return;
                 }
 
-                addMessage(MessageType.INFO, "Generating schematic...");
                 isGenerating = true;
+                statusText = "Generating... Please Wait.";
+                updateButtons();
                 
-                OpenAIIntegration.generateSchematic(promptText, null).thenAccept(script -> {
-                    net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
-                        try {
-                            System.out.println("AI Script: \n" + script);
-                            boolean success = OpenAISchematicBuilder.buildAndSave(schemName, OpenAISchematicDSLParser.parse(script));
-                            
-                            if (success) {
-                                addMessage(MessageType.SUCCESS, "Schematic built via AI successfully.");
-                            } else {
-                                addMessage(MessageType.ERROR, "Failed to compile the DSL script.");
-                            }
-                        } catch (Exception e) {
-                            addMessage(MessageType.ERROR, "Crash while compiling script: " + e.getMessage());
-                        } finally {
-                            isGenerating = false;
+                if (useHighEffort) {
+                    HighEffortAIWorkflow.INSTANCE.start(promptText, schemName, new HighEffortAIWorkflow.IProgressCallback() {
+                        @Override
+                        public void onProgress(String msg) {
+                            net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
+                                statusText = msg;
+                                updateButtons();
+                            });
+                        }
+
+                        @Override
+                        public void onComplete(boolean success, String message) {
+                            net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
+                                isGenerating = false;
+                                statusText = "";
+                                updateButtons();
+                                if (success) {
+                                    addMessage(MessageType.SUCCESS, message);
+                                } else {
+                                    addMessage(MessageType.ERROR, message);
+                                }
+                            });
                         }
                     });
-                }).exceptionally(e -> {
-                    net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
-                        addMessage(MessageType.ERROR, "API Failure: " + e.getMessage());
-                        isGenerating = false;
+                } else {
+                    OpenAIIntegration.generateSchematic(promptText, null).thenAccept(script -> {
+                        net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
+                            try {
+                                System.out.println("AI Script: \n" + script);
+                                boolean success = OpenAISchematicBuilder.buildAndSave(schemName, OpenAISchematicDSLParser.parse(script));
+                                
+                                if (success) {
+                                    addMessage(MessageType.SUCCESS, "Schematic built via AI successfully.");
+                                } else {
+                                    addMessage(MessageType.ERROR, "Failed to compile the DSL script.");
+                                }
+                            } catch (Exception e) {
+                                addMessage(MessageType.ERROR, "Crash while compiling script: " + e.getMessage());
+                            } finally {
+                                isGenerating = false;
+                                statusText = "";
+                                updateButtons();
+                            }
+                        });
+                    }).exceptionally(e -> {
+                        net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
+                            addMessage(MessageType.ERROR, "API Failure: " + e.getMessage());
+                            isGenerating = false;
+                            statusText = "";
+                            updateButtons();
+                        });
+                        return null;
                     });
-                    return null;
-                });
+                }
             }
         });
         
-        ButtonGeneric cancelButton = new ButtonGeneric(x + 110, y + 80, 100, 20, "Cancel");
+        ButtonGeneric cancelButton = new ButtonGeneric(x + 110, y + 80, 80, 20, "Back");
         this.addButton(cancelButton, new IButtonActionListener() {
             @Override
             public void actionPerformedWithButton(ButtonBase button, int mouseButton) {
-                GuiBase.openGui(new GuiMainMenu());
+                if (!isGenerating) {
+                    GuiBase.openGui(new GuiMainMenu());
+                }
             }
         });
+
+        this.pauseResumeButton = new ButtonGeneric(x + 200, y + 80, 80, 20, "Pause");
+        this.pauseResumeButton.setEnabled(false);
+        this.addButton(this.pauseResumeButton, new IButtonActionListener() {
+            @Override
+            public void actionPerformedWithButton(ButtonBase button, int mouseButton) {
+                if (useHighEffort && isGenerating) {
+                    if (HighEffortAIWorkflow.INSTANCE.getState() == HighEffortAIWorkflow.State.PAUSED) {
+                        HighEffortAIWorkflow.INSTANCE.resume();
+                        pauseResumeButton.setDisplayString("Pause");
+                    } else {
+                        HighEffortAIWorkflow.INSTANCE.pause();
+                        pauseResumeButton.setDisplayString("Resume");
+                    }
+                }
+            }
+        });
+
+        this.abortButton = new ButtonGeneric(x + 290, y + 80, 80, 20, "Abort");
+        this.abortButton.setEnabled(false);
+        this.addButton(this.abortButton, new IButtonActionListener() {
+            @Override
+            public void actionPerformedWithButton(ButtonBase button, int mouseButton) {
+                if (isGenerating && useHighEffort) {
+                    HighEffortAIWorkflow.INSTANCE.abort();
+                }
+            }
+        });
+    }
+
+    private void updateButtons() {
+        this.generateButton.setEnabled(!isGenerating);
+        this.highEffortToggle.setEnabled(!isGenerating);
+        this.pauseResumeButton.setEnabled(isGenerating && useHighEffort);
+        this.abortButton.setEnabled(isGenerating && useHighEffort);
+        
+        if (!isGenerating) {
+            this.pauseResumeButton.setDisplayString("Pause");
+        }
     }
 
     @Override
@@ -138,8 +228,8 @@ public class GuiOpenAISchematic extends GuiBase {
         drawContext.drawText(this.textRenderer, "Output File Name:", x, y + 30, 0xFFFFFF, true);
         this.nameField.render(drawContext, mouseX, mouseY, partialTicks);
         
-        if (isGenerating) {
-            drawContext.drawText(this.textRenderer, "Generating... Please wait.", x, y + 120, 0xFFFF00, true);
+        if (isGenerating && !statusText.isEmpty()) {
+            drawContext.drawText(this.textRenderer, statusText, x - 50, y + 120, 0xFFFF00, true);
         }
     }
 }
