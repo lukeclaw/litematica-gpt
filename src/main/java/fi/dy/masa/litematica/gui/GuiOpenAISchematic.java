@@ -21,6 +21,7 @@ public class GuiOpenAISchematic extends GuiBase {
     private boolean useHighEffort = false;
     private boolean isGenerating = false;
     private String statusText = "";
+    private final java.util.List<String> eventLog = new java.util.ArrayList<>();
     
     private ButtonGeneric generateButton;
     private ButtonGeneric abortButton;
@@ -73,6 +74,8 @@ public class GuiOpenAISchematic extends GuiBase {
 
                 isGenerating = true;
                 statusText = "Generating... Please Wait.";
+                eventLog.clear();
+                eventLog.add("Generation Started...");
                 updateButtons();
                 
                 if (useHighEffort) {
@@ -81,6 +84,8 @@ public class GuiOpenAISchematic extends GuiBase {
                         public void onProgress(String msg) {
                             net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
                                 statusText = msg;
+                                eventLog.add(msg);
+                                if (eventLog.size() > 15) eventLog.remove(0);
                                 updateButtons();
                             });
                         }
@@ -90,6 +95,8 @@ public class GuiOpenAISchematic extends GuiBase {
                             net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
                                 isGenerating = false;
                                 statusText = "";
+                                eventLog.add(success ? "SUCCESS: " + message : "ERROR: " + message);
+                                if (eventLog.size() > 15) eventLog.remove(0);
                                 updateButtons();
                                 if (success) {
                                     addMessage(MessageType.SUCCESS, message);
@@ -108,11 +115,14 @@ public class GuiOpenAISchematic extends GuiBase {
                                 
                                 if (success) {
                                     addMessage(MessageType.SUCCESS, "Schematic built via AI successfully.");
+                                    eventLog.add("Schematic built successfully.");
                                 } else {
                                     addMessage(MessageType.ERROR, "Failed to compile the DSL script.");
+                                    eventLog.add("Failed to compile script.");
                                 }
                             } catch (Exception e) {
                                 addMessage(MessageType.ERROR, "Crash while compiling script: " + e.getMessage());
+                                eventLog.add("Crash: " + e.getMessage());
                             } finally {
                                 isGenerating = false;
                                 statusText = "";
@@ -122,6 +132,7 @@ public class GuiOpenAISchematic extends GuiBase {
                     }).exceptionally(e -> {
                         net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
                             addMessage(MessageType.ERROR, "API Failure: " + e.getMessage());
+                            eventLog.add("API Failure: " + e.getMessage());
                             isGenerating = false;
                             statusText = "";
                             updateButtons();
@@ -228,8 +239,12 @@ public class GuiOpenAISchematic extends GuiBase {
         drawContext.drawText(this.textRenderer, "Output File Name:", x, y + 30, 0xFFFFFF, true);
         this.nameField.render(drawContext, mouseX, mouseY, partialTicks);
         
-        if (isGenerating && !statusText.isEmpty()) {
-            drawContext.drawText(this.textRenderer, statusText, x - 50, y + 120, 0xFFFF00, true);
+        if (isGenerating || !eventLog.isEmpty()) {
+            int logY = y + 120;
+            for (String line : eventLog) {
+                drawContext.drawText(this.textRenderer, line, x - 50, logY, 0xFFFF00, true);
+                logY += 10;
+            }
         }
     }
 }

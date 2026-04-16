@@ -9,6 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import fi.dy.masa.litematica.Litematica;
 
 public class OpenAISchematicDSLParser {
 
@@ -45,17 +46,11 @@ public class OpenAISchematicDSLParser {
                 if (parts.length == 2) {
                     char c = parts[0].trim().charAt(0);
                     String stateStr = parts[1].trim();
-                    try {
-                        BlockState state = Registries.BLOCK.get(Identifier.of(stateStr)).getDefaultState();
-                        palette.put(c, state);
-                    } catch (Exception e) {
-                        try {
-                            BlockState stateLegacy = Registries.BLOCK.get(Identifier.of("minecraft", stateStr)).getDefaultState();
-                            palette.put(c, stateLegacy);
-                        } catch (Exception ex) {
-                            palette.put(c, Blocks.AIR.getDefaultState());
-                        }
+                    BlockState state = parseState(stateStr);
+                    if (state.isAir() && !stateStr.contains("air")) {
+                        Litematica.logger.warn("DSL Parser: Palette character '{}' mapped to unknown block state: '{}'. Defaulting to AIR.", c, stateStr);
                     }
+                    palette.put(c, state);
                 }
                 continue;
             }
@@ -67,6 +62,8 @@ public class OpenAISchematicDSLParser {
                     char c = line.charAt(x);
                     if (c != '.' && palette.containsKey(c)) {
                         blocks.put(new BlockPos(x + layerOffsetX, currentLayerY, layerZ + layerOffsetZ), palette.get(c));
+                    } else if (c != '.' && !palette.containsKey(c)) {
+                        Litematica.logger.warn("DSL Parser: Unrecognized character '{}' in layer_y {} at x={}. No palette mapping found.", c, currentLayerY, x);
                     }
                 }
                 layerZ++;
@@ -74,6 +71,7 @@ public class OpenAISchematicDSLParser {
             }
 
             String[] tokens = line.split("\\s+");
+            if (tokens.length == 0) continue;
             String cmd = tokens[0].toLowerCase();
             
             try {
@@ -164,9 +162,11 @@ public class OpenAISchematicDSLParser {
                     cursorZ += Integer.parseInt(tokens[3]);
                 } else if (cmd.equals("cursor_set")) {
                     blocks.put(new BlockPos(cursorX, cursorY, cursorZ), parseState(tokens[1]));
+                } else {
+                    Litematica.logger.warn("DSL Parser: Unknown command '{}' in line: '{}'", cmd, line);
                 }
             } catch (Exception e) {
-                System.out.println("Failed to parse DSL line: " + line);
+                Litematica.logger.error("DSL Parser: Error parsing line: '{}'", line, e);
             }
         }
         
