@@ -57,23 +57,27 @@ public class GuiOpenAISchematic extends GuiBase {
                 isGenerating = true;
                 
                 OpenAIIntegration.generateSchematic(promptText, null).thenAccept(script -> {
-                    try {
-                        System.out.println("AI Script: \n" + script);
-                        boolean success = OpenAISchematicBuilder.buildAndSave(schemName, OpenAISchematicDSLParser.parse(script));
-                        
-                        if (success) {
-                            addMessage(MessageType.SUCCESS, "Schematic built via AI successfully.");
-                        } else {
-                            addMessage(MessageType.ERROR, "Failed to compile the DSL script.");
+                    net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
+                        try {
+                            System.out.println("AI Script: \n" + script);
+                            boolean success = OpenAISchematicBuilder.buildAndSave(schemName, OpenAISchematicDSLParser.parse(script));
+                            
+                            if (success) {
+                                addMessage(MessageType.SUCCESS, "Schematic built via AI successfully.");
+                            } else {
+                                addMessage(MessageType.ERROR, "Failed to compile the DSL script.");
+                            }
+                        } catch (Exception e) {
+                            addMessage(MessageType.ERROR, "Crash while compiling script: " + e.getMessage());
+                        } finally {
+                            isGenerating = false;
                         }
-                    } catch (Exception e) {
-                        addMessage(MessageType.ERROR, "Crash while compiling script: " + e.getMessage());
-                    } finally {
-                        isGenerating = false;
-                    }
+                    });
                 }).exceptionally(e -> {
-                    addMessage(MessageType.ERROR, "API Failure: " + e.getMessage());
-                    isGenerating = false;
+                    net.minecraft.client.MinecraftClient.getInstance().execute(() -> {
+                        addMessage(MessageType.ERROR, "API Failure: " + e.getMessage());
+                        isGenerating = false;
+                    });
                     return null;
                 });
             }

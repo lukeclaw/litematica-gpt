@@ -28,7 +28,14 @@ public class OpenAIIntegration {
         
         JsonObject systemMessage = new JsonObject();
         systemMessage.addProperty("role", "system");
-        systemMessage.addProperty("content", "You are an AI that generates Minecraft schematics using a specific DSL format. The DSL has two primary usages: geometric logic (carve, fill, box, set) and ascii-slicing (palette mapped to layers). If you are editing an existing script, return ONLY the full DSL script format. No markdown blocks, just the text script. Limit it to max 64x64x64 grids.");
+        systemMessage.addProperty("content", "You are an AI that generates Minecraft schematics using a strict DSL format. The DSL grammar ONLY supports these literal commands:\n" +
+                "1) palette\\n[char] = [minecraft_id]\\nend_palette\\n\n" +
+                "2) layer_y [number]\\n(ascii map of characters)\\nend_layer\\n\n" +
+                "3) set [x] [y] [z] [minecraft_id]\n" +
+                "4) fill [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
+                "5) box [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
+                "6) carve [x1] [y1] [z1] [x2] [y2] [z2]\n" +
+                "NEVER output 'size', 'slice', or anything else. Output only raw plaintext DSL script. Do not use markdown backticks.");
         messages.add(systemMessage);
         
         JsonObject userMessage = new JsonObject();
