@@ -23,6 +23,7 @@ public class MainMenuScreen extends BaseScreen
     protected final GenericButton loadSchematicsScreenButton;
     protected final GenericButton loadedSchematicsListScreenButton;
     protected final GenericButton schematicManagerScreenButton;
+    protected final GenericButton openAISchematicScreenButton;
     protected final GenericButton schematicPlacementsListScreenButton;
     protected final GenericButton schematicVcsScreenButton;
     protected final GenericButton taskManagerScreenButton;
@@ -42,6 +43,7 @@ public class MainMenuScreen extends BaseScreen
 
         this.configScreenButton           = GenericButton.create("litematica.button.change_menu.config_menu",       LitematicaIcons.CONFIGURATION);
         this.schematicManagerScreenButton = GenericButton.create("litematica.button.change_menu.schematic_manager", LitematicaIcons.SCHEMATIC_MANAGER);
+        this.openAISchematicScreenButton  = GenericButton.create("Generate AI Schematic",                           LitematicaIcons.SCHEMATIC_BROWSER);
         this.schematicVcsScreenButton     = GenericButton.create("litematica.button.change_menu.schematic_vcs",     LitematicaIcons.SCHEMATIC_VCS);
         this.taskManagerScreenButton      = GenericButton.create("litematica.button.change_menu.task_manager",      LitematicaIcons.TASK_MANAGER);
 
@@ -66,6 +68,7 @@ public class MainMenuScreen extends BaseScreen
 
         this.configScreenButton.setActionListener(ConfigScreen::openConfigScreen);
         this.schematicManagerScreenButton.setActionListener(() -> openScreenWithParent(new SchematicManagerScreen()));
+        this.openAISchematicScreenButton.setActionListener(() -> openScreenWithParent(new OpenAISchematicScreen()));
         this.schematicVcsScreenButton.setActionListener(MainMenuScreen::openSchematicProjectsScreen);
         this.taskManagerScreenButton.setActionListener(() -> openScreenWithParent(new TaskManagerScreen()));
 
@@ -93,6 +96,7 @@ public class MainMenuScreen extends BaseScreen
 
         this.addEqualWidthWidget(this.configScreenButton, list);
         this.addEqualWidthWidget(this.schematicManagerScreenButton, list);
+        this.addEqualWidthWidget(this.openAISchematicScreenButton, list);
         this.addEqualWidthWidget(this.schematicVcsScreenButton, list);
         this.addEqualWidthWidget(this.taskManagerScreenButton, list);
 
@@ -142,8 +146,9 @@ public class MainMenuScreen extends BaseScreen
         x = this.schematicPlacementsListScreenButton.getRight() + 20;
         this.configScreenButton.setPosition(x, y);
         this.schematicManagerScreenButton.setPosition(x, y + 88);
-        this.taskManagerScreenButton.setPosition(x, y + 110);
-        this.schematicVcsScreenButton.setPosition(x, y + 132);
+        this.openAISchematicScreenButton.setPosition(x, y + 110);
+        this.taskManagerScreenButton.setPosition(x, y + 132);
+        this.schematicVcsScreenButton.setPosition(x, y + 154);
     }
 
     protected void addEqualWidthWidget(InteractableWidget widget, List<InteractableWidget> widgets)

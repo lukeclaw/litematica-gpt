@@ -49,6 +49,7 @@ public class Configs
         public static final BooleanConfig CHANGE_SELECTED_CORNER                    = new BooleanConfig("changeSelectedCornerOnMove", true);
         public static final BooleanConfig CLONE_AT_ORIGINAL_POS                     = new BooleanConfig("cloneAtOriginalPosition", true);
         public static final StringConfig  COMMAND_NAME_SETBLOCK                     = new StringConfig( "commandNameSetblock", "setblock");
+        public static final StringConfig  OPENAI_API_KEY                            = new StringConfig("openAiApiKey", "");
         public static final StringConfig  DATE_FORMAT                               = new StringConfig( "dateFormat", "yyyy-MM-dd HH:mm:ss");
         public static final BooleanConfig DEBUG_MESSAGES                            = new BooleanConfig("debugMessages", false);
         public static final BooleanConfig EASY_PLACE_CLICK_ADJACENT                 = new BooleanConfig("easyPlaceClickAdjacent", false);
@@ -84,6 +85,7 @@ public class Configs
                 CHANGE_SELECTED_CORNER,
                 CLONE_AT_ORIGINAL_POS,
                 COMMAND_NAME_SETBLOCK,
+                OPENAI_API_KEY,
                 CUSTOM_SCHEMATIC_DIRECTORY,
                 DATE_FORMAT,
                 DEBUG_MESSAGES,
