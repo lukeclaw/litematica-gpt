@@ -3,7 +3,7 @@ package fi.dy.masa.litematica.schematic.ai;
 import fi.dy.masa.litematica.data.DataManager;
 import fi.dy.masa.litematica.schematic.LitematicaSchematic;
 import fi.dy.masa.litematica.schematic.container.LitematicaBlockStateContainer;
-import fi.dy.masa.litematica.schematic.util.SchematicFileUtils;
+
 import fi.dy.masa.litematica.selection.AreaSelection;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
@@ -33,8 +33,14 @@ public class OpenAISchematicBuilder {
         BlockPos origin = new BlockPos(minX, minY, minZ);
         BlockPos sizePos = new BlockPos(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1);
 
-        AreaSelection areaSelection = new AreaSelection(name, origin);
-        areaSelection.addRegion("AI-Region", origin, origin.add(sizePos).add(-1, -1, -1));
+        AreaSelection areaSelection = new AreaSelection();
+        areaSelection.setName(name);
+        areaSelection.setExplicitOrigin(origin);
+        String regionName = areaSelection.createNewSubRegionBox(origin, "AI-Region");
+        fi.dy.masa.litematica.selection.Box box = areaSelection.getSubRegionBox(regionName);
+        if (box != null) {
+            box.setPos2(origin.add(sizePos).add(-1, -1, -1));
+        }
 
         LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(areaSelection, "OpenAI Generator");
         if (schematic == null) return false;
