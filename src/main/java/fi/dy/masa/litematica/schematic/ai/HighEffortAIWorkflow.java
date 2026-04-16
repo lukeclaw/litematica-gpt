@@ -164,7 +164,9 @@ public class HighEffortAIWorkflow {
                 for (int i = 0; i < conns.size(); i++) {
                     JsonObject c = conns.get(i).getAsJsonObject();
                     if (c.has("name") && c.has("coord")) {
-                        connectionsText += "- " + c.get("name").getAsString() + " at " + c.get("coord").getAsString() + "\n";
+                        String nameStr = c.get("name").isJsonPrimitive() ? c.get("name").getAsString() : c.get("name").toString();
+                        String coordStr = c.get("coord").isJsonPrimitive() ? c.get("coord").getAsString() : c.get("coord").toString();
+                        connectionsText += "- " + nameStr + " at " + coordStr + "\n";
                     }
                 }
             }
