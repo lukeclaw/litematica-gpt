@@ -65,7 +65,7 @@ public class HighEffortAIWorkflow {
         
         String plannerPrompt = "You are an expert Minecraft Architect. Semantically break down the following request into primitive geometric components.\n" +
                                "You MUST output raw JSON format with a 'global_bounds' array [x1,y1,z1, x2,y2,z2], a 'global_palette' object, and a 'parts' array. Break it down into as many logical parts as necessary for high detail.\n" +
-                               "CRITICAL: Prioritize 'Major Structural Assemblies' (e.g., Head, Torso, Limbs, Hull) over minor features. DO NOT separate tiny details like 'eyes' or 'buttons' into their own parts; instead, include them in the instructions of the larger parent assembly. Target 5-8 high-quality parts.\n" +
+                               "CRITICAL: Prioritize 'Major Structural Assemblies' (e.g., Head, Torso, Limbs, Hull) over minor features. DO NOT separate tiny details like 'eyes' or 'buttons' into their own parts; instead, include them in the instructions of the larger parent assembly. Target exactly 4-8 high-quality parts.\n" +
                                "Consistency is CRITICAL. Define a shared 'global_palette' for the entire project so all sub-agents use identical blocks for the same features.\n" +
                                "If parts physically intersect (like a leg joining a torso), explicitly define identical 'connections' interface coordinates in *both* intersecting parts so they fuse properly.\n" +
                                "Example:\n{\n \"global_bounds\": [0,0,0, 10,20,10],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Left Leg\", \"bounds\": [0,0,0, 4,5,4], \"instructions\": \"make it out of oak logs\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2]\"}]},\n  {\"name\": \"Torso\", \"bounds\": [0,5,0, 6,10,6], \"instructions\": \"Build torso with detail\", \"connections\": [{\"name\": [\"torso_socket\", \"head_socket\"], \"coord\": [\"[2,5,2]\", \"[3,10,3]\"]}]}\n ]\n}\n\nRequest: " + prompt;
@@ -117,6 +117,22 @@ public class HighEffortAIWorkflow {
         });
     }
 
+    private int[] parseBounds(JsonArray arr) {
+        if (arr.size() == 6) {
+            int[] b = new int[6];
+            for (int i = 0; i < 6; i++) b[i] = arr.get(i).getAsInt();
+            return b;
+        } else if (arr.size() == 2 && arr.get(0).isJsonArray() && arr.get(1).isJsonArray()) {
+            JsonArray a1 = arr.get(0).getAsJsonArray();
+            JsonArray a2 = arr.get(1).getAsJsonArray();
+            return new int[] {
+                a1.get(0).getAsInt(), a1.get(1).getAsInt(), a1.get(2).getAsInt(),
+                a2.get(0).getAsInt(), a2.get(1).getAsInt(), a2.get(2).getAsInt()
+            };
+        }
+        throw new IllegalStateException("Invalid bounds array size: " + arr.size());
+    }
+
     private synchronized void dispatchWorkers() {
         if (this.state != State.GENERATING) return;
 
@@ -132,11 +148,14 @@ public class HighEffortAIWorkflow {
     private void startPart(int index) {
         JsonObject part = partsPlan.get(index).getAsJsonObject();
         String partName = part.get("name").getAsString();
-        JsonArray bounds = part.getAsJsonArray("bounds");
+        JsonArray boundsJson = part.getAsJsonArray("bounds");
         String instructions = part.get("instructions").getAsString();
         
         Litematica.logger.info("Dispatching Sub-Agent for Part {}/{}: '{}'", (index + 1), partsPlan.size(), partName);
         
+        int[] b = parseBounds(boundsJson);
+        int x1 = b[0], y1 = b[1], z1 = b[2], x2 = b[3], y2 = b[4], z2 = b[5];
+
         String connectionsText = "";
         if (part.has("connections") && part.get("connections").isJsonArray()) {
             JsonArray conns = part.getAsJsonArray("connections");
@@ -159,16 +178,9 @@ public class HighEffortAIWorkflow {
         String scaleText = "";
         if (this.globalBounds != null) {
             scaleText = "\nPROJECT SCALE CONTEXT: You are building a piece of a larger structure. The TOTAL build bounds are: " + this.globalBounds.toString() + ".\n" +
-                        "Your specific part's bounds are ONLY: " + bounds.toString() + ". Ensure your part's proportions make sense relative to the total build size.\n";
+                        "Your specific part's bounds are ONLY: [" + x1 + "," + y1 + "," + z1 + "," + x2 + "," + y2 + "," + z2 + "]. Ensure your part's proportions make sense relative to the total build size.\n";
         }
         
-        int x1 = bounds.get(0).getAsInt();
-        int y1 = bounds.get(1).getAsInt();
-        int z1 = bounds.get(2).getAsInt();
-        int x2 = bounds.get(3).getAsInt();
-        int y2 = bounds.get(4).getAsInt();
-        int z2 = bounds.get(5).getAsInt();
-
         callback.onProgress("Generating: " + partName);
 
         String systemInstruction = "You are a sub-agent generating a Minecraft schematic part: '" + partName + "'.\n" +
