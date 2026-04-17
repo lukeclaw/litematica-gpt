@@ -177,13 +177,26 @@ public class OpenAISchematicDSLParser {
     }
 
     private static BlockState parseState(String str) {
+        // AI often adds 's' to block IDs incorrectly (e.g., quartz_blocks)
+        if (str.endsWith("_blocks") && !str.contains("minecraft:quartz_blocks")) {
+            str = str.substring(0, str.length() - 1);
+        }
+        if (str.equals("minecraft:quartz_blocks")) {
+            str = "minecraft:quartz_block";
+        }
+
         try {
             return Registries.BLOCK.get(Identifier.of(str)).getDefaultState();
         } catch (Exception e) {
             try {
                 return Registries.BLOCK.get(Identifier.of("minecraft", str)).getDefaultState();
             } catch (Exception ex) {
-                return Blocks.AIR.getDefaultState();
+                String fallbackStr = Configs.Generic.AI_FALLBACK_BLOCK.getStringValue();
+                try {
+                    return Registries.BLOCK.get(Identifier.of(fallbackStr)).getDefaultState();
+                } catch (Exception ex2) {
+                    return Blocks.STONE.getDefaultState();
+                }
             }
         }
     }

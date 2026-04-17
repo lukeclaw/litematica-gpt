@@ -49,6 +49,7 @@ public class Configs implements IConfigHandler
         public static final ConfigString        COMMAND_NAME_SETBLOCK       = new ConfigString( "commandNameSetblock", "setblock", "litematica.config.generic.comment.commandNameSetblock").translatedName("litematica.config.generic.name.commandNameSetblock");
         public static final ConfigString        COMMAND_NAME_SUMMON         = new ConfigString( "commandNameSummon", "summon", "litematica.config.generic.comment.commandNameSummon").translatedName("litematica.config.generic.name.commandNameSummon");
         public static final ConfigString        OPENAI_API_KEY              = new ConfigString( "openAiApiKey", "", "litematica.config.generic.comment.openAiApiKey").translatedName("litematica.config.generic.name.openAiApiKey");
+        public static final ConfigString        AI_FALLBACK_BLOCK           = new ConfigString( "aiFallbackBlock", "minecraft:stone", "litematica.config.generic.comment.aiFallbackBlock").translatedName("litematica.config.generic.name.aiFallbackBlock");
         public static final ConfigInteger       COMMAND_TASK_INTERVAL       = new ConfigInteger("commandTaskInterval", 1, 1, 1000, "litematica.config.generic.comment.commandTaskInterval").translatedName("litematica.config.generic.name.commandTaskInterval");
         public static final ConfigBoolean       COMMAND_USE_WORLDEDIT       = new ConfigBoolean("commandUseWorldEdit", false, "litematica.config.generic.comment.commandUseWorldEdit").translatedName("litematica.config.generic.name.commandUseWorldEdit");
         public static final ConfigBoolean       DEBUG_LOGGING               = new ConfigBoolean("debugLogging", false, "litematica.config.generic.comment.debugLogging").translatedName("litematica.config.generic.name.debugLogging");
@@ -162,6 +163,7 @@ public class Configs implements IConfigHandler
                 COMMAND_NAME_SETBLOCK,
                 COMMAND_NAME_SUMMON,
                 OPENAI_API_KEY,
+                AI_FALLBACK_BLOCK,
                 COMMAND_TASK_INTERVAL,
                 CUSTOM_SCHEMATIC_BASE_DIRECTORY,
                 EASY_PLACE_SWAP_INTERVAL,
