@@ -66,9 +66,10 @@ public class HighEffortAIWorkflow {
         String plannerPrompt = "You are an expert Minecraft Architect. Semantically break down the following request into primitive geometric components.\n" +
                                "You MUST output raw JSON format with a 'global_bounds' array [x1,y1,z1, x2,y2,z2], a 'global_palette' object, and a 'parts' array. Break it down into as many logical parts as necessary for high detail.\n" +
                                "CRITICAL: Prioritize 'Major Structural Assemblies' (e.g., Head, Torso, Limbs, Hull) over minor features. DO NOT separate tiny details like 'eyes' or 'buttons' into their own parts; instead, include them in the instructions of the larger parent assembly. Target exactly 4-8 high-quality parts.\n" +
+                               "SYMMETRY & DUPLICATES: If there are multiple identical/symmetrical components (e.g., 4 identical legs, 2 identical wings), GROUP them into a single part that encompasses all their bounding boxes, and instruct the sub-agent to build ALL of them. Do NOT split identical parts into separate sub-agents.\n" +
                                "Consistency is CRITICAL. Define a shared 'global_palette' for the entire project so all sub-agents use identical blocks for the same features.\n" +
                                "If parts physically intersect (like a leg joining a torso), explicitly define identical 'connections' interface coordinates in *both* intersecting parts so they fuse properly.\n" +
-                               "Example:\n{\n \"global_bounds\": [0,0,0, 10,20,10],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Left Leg\", \"bounds\": [0,0,0, 4,5,4], \"instructions\": \"make it out of oak logs\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2]\"}]},\n  {\"name\": \"Torso\", \"bounds\": [0,5,0, 6,10,6], \"instructions\": \"Build torso with detail\", \"connections\": [{\"name\": [\"torso_socket\", \"head_socket\"], \"coord\": [\"[2,5,2]\", \"[3,10,3]\"]}]}\n ]\n}\n\nRequest: " + prompt;
+                               "Example:\n{\n \"global_bounds\": [0,0,0, 10,20,10],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Legs (All 4)\", \"bounds\": [0,0,0, 10,5,10], \"instructions\": \"Build 4 identical legs at the corners out of oak logs.\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2], [8,5,2], [2,5,8], [8,5,8]\"}]},\n  {\"name\": \"Torso\", \"bounds\": [0,5,0, 10,15,10], \"instructions\": \"Build torso with detail\", \"connections\": [{\"name\": [\"torso_socket\", \"head_socket\"], \"coord\": [\"[2,5,2], [8,5,2], [2,5,8], [8,5,8]\", \"[5,15,5]\"]}]}\n ]\n}\n\nRequest: " + prompt;
 
         CompletableFuture<HttpResponse<String>> plannerFuture = sendApiRequest(plannerPrompt, "gpt-5.4-mini", null);
         this.activeFutures.add(plannerFuture);
@@ -166,7 +167,7 @@ public class HighEffortAIWorkflow {
                     if (c.has("name") && c.has("coord")) {
                         String nameStr = c.get("name").isJsonPrimitive() ? c.get("name").getAsString() : c.get("name").toString();
                         String coordStr = c.get("coord").isJsonPrimitive() ? c.get("coord").getAsString() : c.get("coord").toString();
-                        connectionsText += "- " + nameStr + " at " + coordStr + "\n";
+                        connectionsText += "- " + nameStr + " at " + coordStr + " -> YOU MUST BRIDGE YOUR BLOCKS TO SMOOTHLY BLEND INTO THIS COORDINATE TO AVOID GAPS.\n";
                     }
                 }
             }
@@ -177,16 +178,31 @@ public class HighEffortAIWorkflow {
             paletteText = "\nPROJECT GLOBAL PALETTE (Use these materials for project-wide consistency):\n" + this.globalPalette.toString() + "\n";
         }
 
+        int width = Math.abs(x2 - x1) + 1;
+        int height = Math.abs(y2 - y1) + 1;
+        int depth = Math.abs(z2 - z1) + 1;
+
         String scaleText = "";
         if (this.globalBounds != null) {
             scaleText = "\nPROJECT SCALE CONTEXT: You are building a piece of a larger structure. The TOTAL build bounds are: " + this.globalBounds.toString() + ".\n" +
-                        "Your specific part's bounds are ONLY: [" + x1 + "," + y1 + "," + z1 + "," + x2 + "," + y2 + "," + z2 + "]. Ensure your part's proportions make sense relative to the total build size.\n";
+                        "Your specific part's bounds are ONLY: [" + x1 + "," + y1 + "," + z1 + "," + x2 + "," + y2 + "," + z2 + "].\n" +
+                        "This means your part has dimensions: Width=" + width + ", Height=" + height + ", Depth=" + depth + ". Plan your geometry to fit EXACTLY within these dimensions.\n";
+        }
+
+        // Context about other parts
+        String contextText = "\nCONTEXT - OTHER PARTS IN THIS BUILD:\n";
+        for (int i = 0; i < partsPlan.size(); i++) {
+            if (i == index) continue;
+            JsonObject otherPart = partsPlan.get(i).getAsJsonObject();
+            String otherName = otherPart.get("name").getAsString();
+            String otherBounds = otherPart.get("bounds").toString();
+            contextText += "- " + otherName + " " + otherBounds + "\n";
         }
         
         callback.onProgress("Generating: " + partName);
 
         String systemInstruction = "You are a sub-agent generating a Minecraft schematic part: '" + partName + "'.\n" +
-            "Specific instructions: " + instructions + "\n" + scaleText + paletteText + connectionsText + "\n" +
+            "Specific instructions: " + instructions + "\n" + scaleText + contextText + paletteText + connectionsText + "\n" +
             "The DSL grammar ONLY supports these literal commands:\n" +
             "1) palette\\n[char] = [minecraft_id]\\nend_palette\\n\n" +
             "2) layer_y [Y] [offsetX] [offsetZ]\\n(ascii map)\\nend_layer\\n\n" +
