@@ -10,10 +10,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import fi.dy.masa.litematica.Litematica;
+import fi.dy.masa.litematica.config.Configs;
 
 public class OpenAISchematicDSLParser {
 
     public static Map<BlockPos, BlockState> parse(String script) {
+        return parse(script, null);
+    }
+
+    private static boolean isWithinBounds(int x, int y, int z, int[] bounds) {
+        if (bounds == null) return true;
+        int minX = Math.min(bounds[0], bounds[3]);
+        int maxX = Math.max(bounds[0], bounds[3]);
+        int minY = Math.min(bounds[1], bounds[4]);
+        int maxY = Math.max(bounds[1], bounds[4]);
+        int minZ = Math.min(bounds[2], bounds[5]);
+        int maxZ = Math.max(bounds[2], bounds[5]);
+        return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
+    }
+
+    public static Map<BlockPos, BlockState> parse(String script, int[] bounds) {
         Map<BlockPos, BlockState> blocks = new HashMap<>();
         Scanner scanner = new Scanner(script);
         
@@ -60,8 +76,12 @@ public class OpenAISchematicDSLParser {
                 // Read row string
                 for (int x = 0; x < line.length(); x++) {
                     char c = line.charAt(x);
+                    int worldX = x + layerOffsetX;
+                    int worldZ = layerZ + layerOffsetZ;
                     if (c != '.' && palette.containsKey(c)) {
-                        blocks.put(new BlockPos(x + layerOffsetX, currentLayerY, layerZ + layerOffsetZ), palette.get(c));
+                        if (isWithinBounds(worldX, currentLayerY, worldZ, bounds)) {
+                            blocks.put(new BlockPos(worldX, currentLayerY, worldZ), palette.get(c));
+                        }
                     } else if (c != '.' && !palette.containsKey(c)) {
                         Litematica.logger.warn("DSL Parser: Unrecognized character '{}' in layer_y {} at x={}. No palette mapping found.", c, currentLayerY, x);
                     }
@@ -95,7 +115,9 @@ public class OpenAISchematicDSLParser {
                     int y = Integer.parseInt(tokens[2]);
                     int z = Integer.parseInt(tokens[3]);
                     BlockState state = parseState(tokens[4]);
-                    blocks.put(new BlockPos(x, y, z), state);
+                    if (isWithinBounds(x, y, z, bounds)) {
+                        blocks.put(new BlockPos(x, y, z), state);
+                    }
                 } else if (cmd.equals("fill")) {
                     int x1 = Integer.parseInt(tokens[1]);
                     int y1 = Integer.parseInt(tokens[2]);
@@ -112,7 +134,9 @@ public class OpenAISchematicDSLParser {
                     for (int x = minX; x <= maxX; x++) {
                         for (int y = minY; y <= maxY; y++) {
                             for (int z = minZ; z <= maxZ; z++) {
-                                blocks.put(new BlockPos(x, y, z), state);
+                                if (isWithinBounds(x, y, z, bounds)) {
+                                    blocks.put(new BlockPos(x, y, z), state);
+                                }
                             }
                         }
                     }
@@ -133,7 +157,9 @@ public class OpenAISchematicDSLParser {
                         for (int y = minY; y <= maxY; y++) {
                             for (int z = minZ; z <= maxZ; z++) {
                                 if (x == minX || x == maxX || y == minY || y == maxY || z == minZ || z == maxZ) {
-                                    blocks.put(new BlockPos(x, y, z), state);
+                                    if (isWithinBounds(x, y, z, bounds)) {
+                                        blocks.put(new BlockPos(x, y, z), state);
+                                    }
                                 }
                             }
                         }
@@ -154,7 +180,9 @@ public class OpenAISchematicDSLParser {
                     for (int x = minX; x <= maxX; x++) {
                         for (int y = minY; y <= maxY; y++) {
                             for (int z = minZ; z <= maxZ; z++) {
-                                blocks.put(new BlockPos(x, y, z), air);
+                                if (isWithinBounds(x, y, z, bounds)) {
+                                    blocks.put(new BlockPos(x, y, z), air);
+                                }
                             }
                         }
                     }
@@ -163,7 +191,9 @@ public class OpenAISchematicDSLParser {
                     cursorY += Integer.parseInt(tokens[2]);
                     cursorZ += Integer.parseInt(tokens[3]);
                 } else if (cmd.equals("cursor_set")) {
-                    blocks.put(new BlockPos(cursorX, cursorY, cursorZ), parseState(tokens[1]));
+                    if (isWithinBounds(cursorX, cursorY, cursorZ, bounds)) {
+                        blocks.put(new BlockPos(cursorX, cursorY, cursorZ), parseState(tokens[1]));
+                    }
                 } else {
                     Litematica.logger.warn("DSL Parser: Unknown command '{}' in line: '{}'", cmd, line);
                 }

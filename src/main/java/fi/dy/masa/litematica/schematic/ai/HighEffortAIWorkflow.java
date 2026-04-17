@@ -194,6 +194,7 @@ public class HighEffortAIWorkflow {
             "4) fill [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
             "5) box [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
             "6) carve [x1] [y1] [z1] [x2] [y2] [z2]\n" +
+            "HARD CONSTRAINT: You MUST NOT place any blocks outside your designated bounds. Your bounds are ABSOLUTE WORLD COORDINATES. Do not use relative coordinates. Any block placed outside your bounds will be physically clipped and deleted by the system.\n" +
             "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
 
         CompletableFuture<HttpResponse<String>> future = sendApiRequest(originalPrompt, "gpt-5.4-mini", systemInstruction);
@@ -217,7 +218,7 @@ public class HighEffortAIWorkflow {
                 
                 script = script.replaceAll("```(\\w+)?|```", "").trim();
                 
-                Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(script);
+                Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(script, b);
                 this.generatedBlocks.putAll(parsedPart);
                 
                 int completed = completedPartsCount.incrementAndGet();
