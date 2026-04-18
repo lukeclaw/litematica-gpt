@@ -250,7 +250,8 @@ public class HighEffortAIWorkflow {
             "- If NO interface points are listed, you are a standalone assembly; position yourself accurately within your local box.\n" +
             "- Favor 3D primitives (box, fill) for mass. Use layer_y for patterns. Avoid thin 'needle' structures unless intended.\n" +
             "- [material] MUST be a single character from your palette (e.g., 'S'). DO NOT use raw IDs in commands.\n" +
-            "HARD CONSTRAINT: You MUST NOT place any blocks outside your LOCAL [0,0,0] to [W-1,H-1,D-1] canvas. Output raw plaintext script ONLY.";
+            "HARD CONSTRAINT: You MUST NOT place any blocks outside your LOCAL [0,0,0] to [W-1,H-1,D-1] canvas.\n" +
+            "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
 
         CompletableFuture<HttpResponse<String>> future = sendApiRequest(originalPrompt, "gpt-5.4-mini", systemInstruction);
         this.activeFutures.add(future);
