@@ -23,6 +23,8 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.Litematica;
 
@@ -174,18 +176,31 @@ public class HighEffortAIWorkflow {
         
         int[] b = parseBounds(boundsJson);
         int x1 = b[0], y1 = b[1], z1 = b[2], x2 = b[3], y2 = b[4], z2 = b[5];
+        BlockPos origin = new BlockPos(x1, y1, z1);
 
         String connectionsText = "";
         if (part.has("connections") && part.get("connections").isJsonArray()) {
             JsonArray conns = part.getAsJsonArray("connections");
             if (conns.size() > 0) {
-                connectionsText = "\nABSOLUTE PHYSICAL CONSTRAINT - Tie-in points: You MUST explicitly place physical blocks intersecting these exact coordinates. Failure to build blocks touching these tie-in coordinates will result in a disconnected structure. Interface points:\n";
+                connectionsText = "\nABSOLUTE PHYSICAL CONSTRAINT - Tie-in points: You MUST explicitly place physical blocks intersecting these LOCAL coordinates (relative to your 0,0,0 start). Interface points:\n";
                 for (int i = 0; i < conns.size(); i++) {
                     JsonObject c = conns.get(i).getAsJsonObject();
                     if (c.has("name") && c.has("coord")) {
                         String nameStr = c.get("name").isJsonPrimitive() ? c.get("name").getAsString() : c.get("name").toString();
                         String coordStr = c.get("coord").isJsonPrimitive() ? c.get("coord").getAsString() : c.get("coord").toString();
-                        connectionsText += "- " + nameStr + " at " + coordStr + " -> YOU MUST BRIDGE YOUR BLOCKS TO SMOOTHLY BLEND INTO THIS COORDINATE TO AVOID GAPS.\n";
+                        
+                        // Translate Absolute coordinates in connection string to Relative coordinates
+                        Matcher m = Pattern.compile("\\[(\\d+),\\s*(\\d+),\\s*(\\d+)\\]").matcher(coordStr);
+                        StringBuilder rb = new StringBuilder();
+                        while (m.find()) {
+                            int cx = Integer.parseInt(m.group(1)) - x1;
+                            int cy = Integer.parseInt(m.group(2)) - y1;
+                            int cz = Integer.parseInt(m.group(3)) - z1;
+                            m.appendReplacement(rb, "[" + cx + "," + cy + "," + cz + "]");
+                        }
+                        m.appendTail(rb);
+                        
+                        connectionsText += "- " + nameStr + " at " + rb.toString() + " -> YOU MUST BRIDGE YOUR BLOCKS TO THIS LOCAL COORDINATE.\n";
                     }
                 }
             }
@@ -202,13 +217,14 @@ public class HighEffortAIWorkflow {
 
         String scaleText = "";
         if (this.globalBounds != null) {
-            scaleText = "\nPROJECT SCALE CONTEXT: You are building a piece of a larger structure. The TOTAL build bounds are: " + this.globalBounds.toString() + ".\n" +
-                        "Your specific part's bounds are ONLY: [" + x1 + "," + y1 + "," + z1 + "," + x2 + "," + y2 + "," + z2 + "].\n" +
-                        "This means your part has dimensions: Width=" + width + ", Height=" + height + ", Depth=" + depth + ". Plan your geometry to fit EXACTLY within these dimensions.\n";
+            scaleText = "\nPROJECT SCALE CONTEXT: You are building a part of a larger structure.\n" +
+                        "YOUR LOCAL CANVAS: [0,0,0] to [" + (width-1) + "," + (height-1) + "," + (depth-1) + "].\n" +
+                        "Dimensions: Width=" + width + ", Height=" + height + ", Depth=" + depth + ".\n" +
+                        "EVERYTHING you build must start at [0,0,0] and stay within these local dimensions.\n";
         }
 
-        // Context about other parts
-        String contextText = "\nCONTEXT - OTHER PARTS IN THIS BUILD:\n";
+        // Context about other parts (translated to relative? no, absolute for context is fine)
+        String contextText = "\nGLOBAL CONTEXT - OTHER PARTS IN THIS BUILD:\n";
         for (int i = 0; i < partsPlan.size(); i++) {
             if (i == index) continue;
             JsonObject otherPart = partsPlan.get(i).getAsJsonObject();
@@ -231,8 +247,8 @@ public class HighEffortAIWorkflow {
             "CRITICAL - SYNTAX & EFFICIENCY:\n" +
             "- [material] MUST be a single character from your palette (e.g., 'S'). DO NOT use raw IDs in commands.\n" +
             "- Use 'set' for single blocks. Use 'fill' or 'box' ONLY for large volumes. Do not waste space.\n" +
-            "- GEOMETRIC DENSITY: Utilize the full 3D volume provided. Avoid flat 2D 'pancake' structures; use multiple layers and commands to create curves, depth, and machinery.\n" +
-            "HARD CONSTRAINT: You MUST NOT place any blocks outside your designated bounds. Your bounds are ABSOLUTE WORLD COORDINATES. Any block placed outside will be physically clipped and deleted.\n" +
+            "- GEOMETRIC DENSITY: Utilize the full 3D volume provided. Avoid flat 2D 'pancake' structures; use multiple layers to create curves and depth.\n" +
+            "HARD CONSTRAINT: You MUST NOT place any blocks outside your LOCAL [0,0,0] to [W-1,H-1,D-1] canvas. DO NOT use massive world coordinates.\n" +
             "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
 
         CompletableFuture<HttpResponse<String>> future = sendApiRequest(originalPrompt, "gpt-5.4-mini", systemInstruction);
@@ -258,7 +274,7 @@ public class HighEffortAIWorkflow {
 
                 script = script.replaceAll("```(\\w+)?|```", "").trim();
                 
-                Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(script, b);
+                Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(script, b, origin);
                 
                 // Additive Merge: Don't let air overwrite existing blocks
                 for (Map.Entry<BlockPos, BlockState> entry : parsedPart.entrySet()) {
