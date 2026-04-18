@@ -13,21 +13,32 @@ import java.util.Map;
 
 public class OpenAISchematicBuilder {
 
-    public static boolean buildAndSave(String name, Map<BlockPos, BlockState> blocks) {
+    public static boolean buildAndSave(String name, Map<BlockPos, BlockState> blocks, int[] explicitBounds) {
         if (blocks.isEmpty()) return false;
 
         System.out.println("Building schematic from " + blocks.size() + " AI instruction blocks...");
         
-        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
-        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
+        int minX, minY, minZ, maxX, maxY, maxZ;
 
-        for (BlockPos pos : blocks.keySet()) {
-            if (pos.getX() < minX) minX = pos.getX();
-            if (pos.getY() < minY) minY = pos.getY();
-            if (pos.getZ() < minZ) minZ = pos.getZ();
-            if (pos.getX() > maxX) maxX = pos.getX();
-            if (pos.getY() > maxY) maxY = pos.getY();
-            if (pos.getZ() > maxZ) maxZ = pos.getZ();
+        if (explicitBounds != null && explicitBounds.length == 6) {
+            minX = Math.min(explicitBounds[0], explicitBounds[3]);
+            minY = Math.min(explicitBounds[1], explicitBounds[4]);
+            minZ = Math.min(explicitBounds[2], explicitBounds[5]);
+            maxX = Math.max(explicitBounds[0], explicitBounds[3]);
+            maxY = Math.max(explicitBounds[1], explicitBounds[4]);
+            maxZ = Math.max(explicitBounds[2], explicitBounds[5]);
+        } else {
+            minX = Integer.MAX_VALUE; minY = Integer.MAX_VALUE; minZ = Integer.MAX_VALUE;
+            maxX = Integer.MIN_VALUE; maxY = Integer.MIN_VALUE; maxZ = Integer.MIN_VALUE;
+
+            for (BlockPos pos : blocks.keySet()) {
+                if (pos.getX() < minX) minX = pos.getX();
+                if (pos.getY() < minY) minY = pos.getY();
+                if (pos.getZ() < minZ) minZ = pos.getZ();
+                if (pos.getX() > maxX) maxX = pos.getX();
+                if (pos.getY() > maxY) maxY = pos.getY();
+                if (pos.getZ() > maxZ) maxZ = pos.getZ();
+            }
         }
 
         BlockPos origin = new BlockPos(minX, minY, minZ);
@@ -53,7 +64,11 @@ public class OpenAISchematicBuilder {
             int x = pos.getX() - minX;
             int y = pos.getY() - minY;
             int z = pos.getZ() - minZ;
-            container.set(x, y, z, entry.getValue());
+            
+            // Safety check against container bounds
+            if (x >= 0 && x < sizePos.getX() && y >= 0 && y < sizePos.getY() && z >= 0 && z < sizePos.getZ()) {
+                container.set(x, y, z, entry.getValue());
+            }
         }
 
         File schematicsDir = DataManager.getSchematicsBaseDirectory();
@@ -62,5 +77,9 @@ public class OpenAISchematicBuilder {
         String fileName = name.endsWith(".litematic") ? name : name + ".litematic";
         
         return schematic.writeToFile(schematicsDir, fileName, true);
+    }
+
+    public static boolean buildAndSave(String name, Map<BlockPos, BlockState> blocks) {
+        return buildAndSave(name, blocks, null);
     }
 }

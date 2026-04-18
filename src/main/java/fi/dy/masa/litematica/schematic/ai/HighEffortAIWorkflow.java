@@ -307,7 +307,14 @@ public class HighEffortAIWorkflow {
 
     private void finishAndSave() {
         Litematica.logger.info("All parts completed. Finalizing and saving schematic: '{}'", schemName);
-        boolean result = OpenAISchematicBuilder.buildAndSave(schemName, generatedBlocks);
+        
+        int[] finalBounds = null;
+        if (this.globalBounds != null && this.globalBounds.size() == 6) {
+            finalBounds = new int[6];
+            for (int i = 0; i < 6; i++) finalBounds[i] = this.globalBounds.get(i).getAsInt();
+        }
+
+        boolean result = OpenAISchematicBuilder.buildAndSave(schemName, generatedBlocks, finalBounds);
         this.state = State.IDLE;
         if (result) {
             Litematica.logger.info("Schematic '{}' saved successfully.", schemName);
