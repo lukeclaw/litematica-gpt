@@ -244,12 +244,13 @@ public class HighEffortAIWorkflow {
             "4) fill [x1] [y1] [z1] [x2] [y2] [z2] [material]\n" +
             "5) box [x1] [y1] [z1] [x2] [y2] [z2] [material]\n" +
             "6) carve [x1] [y1] [z1] [x2] [y2] [z2]\n" +
-            "CRITICAL - SYNTAX & EFFICIENCY:\n" +
+            "CRITICAL - ALIGNMENT & COUPLING:\n" +
+            "- YOUR LOCAL CANVAS: [0,0,0] is the minimum corner of your assigned box.\n" +
+            "- If 'Interface points' are listed above, you MUST build physical structures that overlap those exact LOCAL coordinates to ensure the project fuses together. Failure to bridge to these points will result in a broken, floating build.\n" +
+            "- If NO interface points are listed, you are a standalone assembly; position yourself accurately within your local box.\n" +
+            "- Favor 3D primitives (box, fill) for mass. Use layer_y for patterns. Avoid thin 'needle' structures unless intended.\n" +
             "- [material] MUST be a single character from your palette (e.g., 'S'). DO NOT use raw IDs in commands.\n" +
-            "- Use 'set' for single blocks. Use 'fill' or 'box' ONLY for large volumes. Do not waste space.\n" +
-            "- GEOMETRIC DENSITY: Utilize the full 3D volume provided. Avoid flat 2D 'pancake' structures; use multiple layers to create curves and depth.\n" +
-            "HARD CONSTRAINT: You MUST NOT place any blocks outside your LOCAL [0,0,0] to [W-1,H-1,D-1] canvas. DO NOT use massive world coordinates.\n" +
-            "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
+            "HARD CONSTRAINT: You MUST NOT place any blocks outside your LOCAL [0,0,0] to [W-1,H-1,D-1] canvas. Output raw plaintext script ONLY.";
 
         CompletableFuture<HttpResponse<String>> future = sendApiRequest(originalPrompt, "gpt-5.4-mini", systemInstruction);
         this.activeFutures.add(future);
