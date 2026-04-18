@@ -206,7 +206,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
             {
                 String dsl = fi.dy.masa.litematica.schematic.ai.OpenAISchematicDSLReverser.reverse(this.widget.schematic);
                 System.out.println("=== DSL REVERSE OUTPUT START ===\n" + dsl + "\n=== DSL REVERSE OUTPUT END ===");
-                fi.dy.masa.litematica.util.InfoUtils.showGuiOrInGameMessage(fi.dy.masa.malilib.gui.Message.MessageType.SUCCESS, "DSL printed to console");
+                fi.dy.masa.malilib.util.InfoUtils.showGuiOrInGameMessage(fi.dy.masa.malilib.gui.Message.MessageType.SUCCESS, "DSL printed to console");
             }
             else if (this.type == Type.UNLOAD)
             {
