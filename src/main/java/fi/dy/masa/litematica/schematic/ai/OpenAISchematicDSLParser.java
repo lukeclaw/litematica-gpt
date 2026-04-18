@@ -62,7 +62,7 @@ public class OpenAISchematicDSLParser {
                 if (parts.length == 2) {
                     char c = parts[0].trim().charAt(0);
                     String stateStr = parts[1].trim();
-                    BlockState state = parseState(stateStr);
+                    BlockState state = parseState(stateStr, palette);
                     if (state.isAir() && !stateStr.contains("air")) {
                         Litematica.logger.warn("DSL Parser: Palette character '{}' mapped to unknown block state: '{}'. Defaulting to AIR.", c, stateStr);
                     }
@@ -114,7 +114,7 @@ public class OpenAISchematicDSLParser {
                     int x = Integer.parseInt(tokens[1]);
                     int y = Integer.parseInt(tokens[2]);
                     int z = Integer.parseInt(tokens[3]);
-                    BlockState state = parseState(tokens[4]);
+                    BlockState state = parseState(tokens[4], palette);
                     if (isWithinBounds(x, y, z, bounds)) {
                         blocks.put(new BlockPos(x, y, z), state);
                     }
@@ -125,7 +125,7 @@ public class OpenAISchematicDSLParser {
                     int x2 = Integer.parseInt(tokens[4]);
                     int y2 = Integer.parseInt(tokens[5]);
                     int z2 = Integer.parseInt(tokens[6]);
-                    BlockState state = parseState(tokens[7]);
+                    BlockState state = parseState(tokens[7], palette);
                     
                     int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
                     int minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
@@ -147,7 +147,7 @@ public class OpenAISchematicDSLParser {
                     int x2 = Integer.parseInt(tokens[4]);
                     int y2 = Integer.parseInt(tokens[5]);
                     int z2 = Integer.parseInt(tokens[6]);
-                    BlockState state = parseState(tokens[7]);
+                    BlockState state = parseState(tokens[7], palette);
                     
                     int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
                     int minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
@@ -192,7 +192,7 @@ public class OpenAISchematicDSLParser {
                     cursorZ += Integer.parseInt(tokens[3]);
                 } else if (cmd.equals("cursor_set")) {
                     if (isWithinBounds(cursorX, cursorY, cursorZ, bounds)) {
-                        blocks.put(new BlockPos(cursorX, cursorY, cursorZ), parseState(tokens[1]));
+                        blocks.put(new BlockPos(cursorX, cursorY, cursorZ), parseState(tokens[1], palette));
                     }
                 } else {
                     Litematica.logger.warn("DSL Parser: Unknown command '{}' in line: '{}'", cmd, line);
@@ -206,7 +206,11 @@ public class OpenAISchematicDSLParser {
         return blocks;
     }
 
-    private static BlockState parseState(String str) {
+    private static BlockState parseState(String str, Map<Character, BlockState> palette) {
+        if (str.length() == 1 && palette.containsKey(str.charAt(0))) {
+            return palette.get(str.charAt(0));
+        }
+
         // AI often adds 's' to block IDs incorrectly (e.g., quartz_blocks)
         if (str.endsWith("_blocks") && !str.contains("minecraft:quartz_blocks")) {
             str = str.substring(0, str.length() - 1);

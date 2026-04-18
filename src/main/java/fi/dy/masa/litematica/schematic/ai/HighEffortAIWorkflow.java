@@ -69,7 +69,7 @@ public class HighEffortAIWorkflow {
                                "SYMMETRY & DUPLICATES: If there are multiple identical/symmetrical components (e.g., 4 identical legs, 2 identical wings), GROUP them into a single part that encompasses all their bounding boxes, and instruct the sub-agent to build ALL of them. Do NOT split identical parts into separate sub-agents.\n" +
                                "Consistency is CRITICAL. Define a shared 'global_palette' for the entire project so all sub-agents use identical blocks for the same features.\n" +
                                "If parts physically intersect (like a leg joining a torso), explicitly define identical 'connections' interface coordinates in *both* intersecting parts so they fuse properly.\n" +
-                               "Example:\n{\n \"global_bounds\": [0,0,0, 10,20,10],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Legs (All 4)\", \"bounds\": [0,0,0, 10,5,10], \"instructions\": \"Build 4 identical legs at the corners out of oak logs.\", \"connections\": [{\"name\": \"torso_socket\", \"coord\": \"[2,5,2], [8,5,2], [2,5,8], [8,5,8]\"}]},\n  {\"name\": \"Torso\", \"bounds\": [0,5,0, 10,15,10], \"instructions\": \"Build torso with detail\", \"connections\": [{\"name\": [\"torso_socket\", \"head_socket\"], \"coord\": [\"[2,5,2], [8,5,2], [2,5,8], [8,5,8]\", \"[5,15,5]\"]}]}\n ]\n}\n\nRequest: " + prompt;
+                               "Example:\n{\n \"global_bounds\": [0,64,0, 150,84,100],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Base Foundation\", \"bounds\": [0,64,0, 150,68,100], \"instructions\": \"Build a solid foundation out of stone_bricks.\", \"connections\": [{\"name\": \"support_struts\", \"coord\": \"[20,68,20], [20,68,80]\"}]},\n  {\"name\": \"Main Superstructure\", \"bounds\": [10,68,10, 140,84,90], \"instructions\": \"Build the main body with detail\", \"connections\": [{\"name\": [\"support_struts\"], \"coord\": [\"[20,68,20], [20,68,80]\"]}]}\n ]\n}\n\nRequest: " + prompt;
 
         CompletableFuture<HttpResponse<String>> plannerFuture = sendApiRequest(plannerPrompt, "gpt-5.4-mini", null);
         this.activeFutures.add(plannerFuture);
@@ -206,10 +206,11 @@ public class HighEffortAIWorkflow {
             "The DSL grammar ONLY supports these literal commands:\n" +
             "1) palette\\n[char] = [minecraft_id]\\nend_palette\\n\n" +
             "2) layer_y [Y] [offsetX] [offsetZ]\\n(ascii map)\\nend_layer\\n\n" +
-            "3) set [x] [y] [z] [minecraft_id]\n" +
-            "4) fill [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
-            "5) box [x1] [y1] [z1] [x2] [y2] [z2] [minecraft_id]\n" +
+            "3) set [x] [y] [z] [material]\n" +
+            "4) fill [x1] [y1] [z1] [x2] [y2] [z2] [material]\n" +
+            "5) box [x1] [y1] [z1] [x2] [y2] [z2] [material]\n" +
             "6) carve [x1] [y1] [z1] [x2] [y2] [z2]\n" +
+            "CRITICAL: [material] MUST be a single character from your palette (e.g., 'S'). DO NOT use raw minecraft IDs in the command body.\n" +
             "HARD CONSTRAINT: You MUST NOT place any blocks outside your designated bounds. Your bounds are ABSOLUTE WORLD COORDINATES. Do not use relative coordinates. Any block placed outside your bounds will be physically clipped and deleted by the system.\n" +
             "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
 
@@ -235,7 +236,13 @@ public class HighEffortAIWorkflow {
                 script = script.replaceAll("```(\\w+)?|```", "").trim();
                 
                 Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(script, b);
-                this.generatedBlocks.putAll(parsedPart);
+                
+                // Additive Merge: Don't let air overwrite existing blocks
+                for (Map.Entry<BlockPos, BlockState> entry : parsedPart.entrySet()) {
+                    if (!entry.getValue().isAir() || !this.generatedBlocks.containsKey(entry.getKey())) {
+                        this.generatedBlocks.put(entry.getKey(), entry.getValue());
+                    }
+                }
                 
                 int completed = completedPartsCount.incrementAndGet();
                 Litematica.logger.info("Successfully parsed and integrated part '{}' ({}/{}).", partName, completed, partsPlan.size());
