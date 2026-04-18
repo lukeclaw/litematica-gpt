@@ -17,6 +17,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import fi.dy.masa.litematica.config.Configs;
 import fi.dy.masa.litematica.Litematica;
 
@@ -31,6 +37,7 @@ public class HighEffortAIWorkflow {
     private State state = State.IDLE;
     private String originalPrompt;
     private String schemName;
+    private Path currentDebugDir;
     private JsonObject globalPalette = null;
     private JsonArray globalBounds = null;
     private JsonArray partsPlan = null;
@@ -58,6 +65,17 @@ public class HighEffortAIWorkflow {
         this.globalBounds = null;
         this.partsPlan = null;
         this.activeFutures.clear();
+
+        // Initialize Debug Directory
+        try {
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String folderName = schemName.replaceAll("[^a-zA-Z0-9.-]", "_") + "_" + timestamp;
+            this.currentDebugDir = Paths.get("run", "ai_debug", folderName);
+            Files.createDirectories(this.currentDebugDir);
+            Litematica.logger.info("Debug DSL scripts will be saved to: {}", this.currentDebugDir.toAbsolutePath());
+        } catch (Exception e) {
+            Litematica.logger.warn("Failed to create AI debug directory.", e);
+        }
         
         this.state = State.PLANNING;
         Litematica.logger.info("Starting High-Effort AI Workflow for: '{}' (File: {})", prompt, schemName);
@@ -236,6 +254,8 @@ public class HighEffortAIWorkflow {
                 
                 Litematica.logger.info("Sub-agent Response for '{}':\n{}", partName, script);
                 
+                savePartDebug(partName, script);
+
                 script = script.replaceAll("```(\\w+)?|```", "").trim();
                 
                 Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(script, b);
@@ -329,6 +349,17 @@ public class HighEffortAIWorkflow {
         this.state = State.IDLE;
         Litematica.logger.error("AI Workflow Failed: {}", error);
         callback.onComplete(false, error);
+    }
+
+    private void savePartDebug(String partName, String script) {
+        if (this.currentDebugDir == null) return;
+        try {
+            String fileName = partName.replaceAll("[^a-zA-Z0-9.-]", "_") + ".txt";
+            Path filePath = currentDebugDir.resolve(fileName);
+            Files.write(filePath, script.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            Litematica.logger.warn("Failed to save debug script for part: " + partName, e);
+        }
     }
     
     public State getState() {
