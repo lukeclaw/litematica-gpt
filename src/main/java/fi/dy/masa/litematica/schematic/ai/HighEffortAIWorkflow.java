@@ -210,8 +210,11 @@ public class HighEffortAIWorkflow {
             "4) fill [x1] [y1] [z1] [x2] [y2] [z2] [material]\n" +
             "5) box [x1] [y1] [z1] [x2] [y2] [z2] [material]\n" +
             "6) carve [x1] [y1] [z1] [x2] [y2] [z2]\n" +
-            "CRITICAL: [material] MUST be a single character from your palette (e.g., 'S'). DO NOT use raw minecraft IDs in the command body.\n" +
-            "HARD CONSTRAINT: You MUST NOT place any blocks outside your designated bounds. Your bounds are ABSOLUTE WORLD COORDINATES. Do not use relative coordinates. Any block placed outside your bounds will be physically clipped and deleted by the system.\n" +
+            "CRITICAL - SYNTAX & EFFICIENCY:\n" +
+            "- [material] MUST be a single character from your palette (e.g., 'S'). DO NOT use raw IDs in commands.\n" +
+            "- Use 'set' for single blocks. Use 'fill' or 'box' ONLY for large volumes. Do not waste space.\n" +
+            "- GEOMETRIC DENSITY: Utilize the full 3D volume provided. Avoid flat 2D 'pancake' structures; use multiple layers and commands to create curves, depth, and machinery.\n" +
+            "HARD CONSTRAINT: You MUST NOT place any blocks outside your designated bounds. Your bounds are ABSOLUTE WORLD COORDINATES. Any block placed outside will be physically clipped and deleted.\n" +
             "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
 
         CompletableFuture<HttpResponse<String>> future = sendApiRequest(originalPrompt, "gpt-5.4-mini", systemInstruction);
