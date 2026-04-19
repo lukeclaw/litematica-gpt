@@ -25,7 +25,7 @@ public enum AIProvider implements IConfigOptionListEntry {
     }
 
     @Override
-    public IConfigOptionListEntry cycleValue(boolean forward) {
+    public IConfigOptionListEntry cycle(boolean forward) {
         int id = this.ordinal();
         if (forward) {
             id++;
