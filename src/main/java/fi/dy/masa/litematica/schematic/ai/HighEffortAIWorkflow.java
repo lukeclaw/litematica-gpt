@@ -47,7 +47,7 @@ public class HighEffortAIWorkflow {
     private AtomicInteger completedPartsCount = new AtomicInteger(0);
     
     private Map<BlockPos, BlockState> generatedBlocks = new ConcurrentHashMap<>();
-    private List<CompletableFuture<HttpResponse<String>>> activeFutures = new CopyOnWriteArrayList<>();
+    private List<CompletableFuture<String>> activeFutures = new CopyOnWriteArrayList<>();
     
     private IProgressCallback callback;
 
@@ -92,30 +92,20 @@ public class HighEffortAIWorkflow {
                                "If parts physically intersect (like a leg joining a torso), explicitly define identical 'connections' interface coordinates in *both* intersecting parts so they fuse properly.\n" +
                                "Example:\n{\n \"global_bounds\": [0,64,0, 80,90,50],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Base Foundation\", \"bounds\": [0,64,0, 80,68,50], \"instructions\": \"Build a solid foundation out of stone_bricks.\", \"connections\": [{\"name\": \"support_struts\", \"coord\": \"[20,68,20], [60,68,20]\"}]},\n  {\"name\": \"Main Superstructure\", \"bounds\": [5,68,5, 75,90,45], \"instructions\": \"Build the main body with detail\", \"connections\": [{\"name\": [\"support_struts\"], \"coord\": [\"[20,68,20], [60,68,20]\"]}]}\n ]\n}\n\nRequest: " + prompt;
 
-        CompletableFuture<HttpResponse<String>> plannerFuture = sendApiRequest(plannerPrompt, "gpt-5.4-mini", null);
+        CompletableFuture<String> plannerFuture = AIIntegration.generate(plannerPrompt, null);
         this.activeFutures.add(plannerFuture);
         
-        plannerFuture.thenAccept(response -> {
+        plannerFuture.thenAccept(content -> {
             this.activeFutures.remove(plannerFuture);
             if (this.state != State.PLANNING) return; // aborted
             
-            if (response.statusCode() != 200) {
-                String errorMsg = "Planner API Error: HTTP " + response.statusCode() + " - " + response.body();
-                Litematica.logger.error(errorMsg);
-                fail(errorMsg);
-                return;
-            }
-            
             try {
-                JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
-                String content = json.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString();
-                
                 Litematica.logger.info("Planner API Response Body: \n{}", content);
                 
                 // Strip markdown backticks if outputted
-                content = content.replaceAll("```json|```", "").trim();
+                String jsonStr = content.replaceAll("```json|```", "").trim();
                 
-                JsonObject planJson = JsonParser.parseString(content).getAsJsonObject();
+                JsonObject planJson = JsonParser.parseString(jsonStr).getAsJsonObject();
                 this.globalPalette = planJson.getAsJsonObject("global_palette");
                 this.globalBounds = planJson.getAsJsonArray("global_bounds");
                 this.partsPlan = planJson.getAsJsonArray("parts");
@@ -254,30 +244,21 @@ public class HighEffortAIWorkflow {
             "HARD CONSTRAINT: You MUST NOT place any blocks outside your LOCAL [0,0,0] to [W-1,H-1,D-1] canvas.\n" +
             "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
 
-        CompletableFuture<HttpResponse<String>> future = sendApiRequest(originalPrompt, "gpt-5.4-mini", systemInstruction);
+        CompletableFuture<String> future = AIIntegration.generate(originalPrompt, systemInstruction);
         this.activeFutures.add(future);
 
-        future.thenAccept(response -> {
+        future.thenAccept(script -> {
             this.activeFutures.remove(future);
             if (this.state != State.GENERATING) return; // Might be paused
             
-            if (response.statusCode() != 200) {
-                String errorMsg = "Sub-agent API Error for '" + partName + "': HTTP " + response.statusCode() + " - " + response.body();
-                Litematica.logger.error(errorMsg);
-                fail(errorMsg);
-                return;
-            }
             try {
-                JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
-                String script = json.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString();
-                
                 Litematica.logger.info("Sub-agent Response for '{}':\n{}", partName, script);
                 
                 savePartDebug(partName, script);
 
-                script = script.replaceAll("```(\\w+)?|```", "").trim();
+                String cleanedScript = script.replaceAll("```(\\w+)?|```", "").trim();
                 
-                Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(script, b, origin);
+                Map<BlockPos, BlockState> parsedPart = OpenAISchematicDSLParser.parse(cleanedScript, b, origin);
                 
                 // Additive Merge: Don't let air overwrite existing blocks
                 for (Map.Entry<BlockPos, BlockState> entry : parsedPart.entrySet()) {
@@ -314,7 +295,7 @@ public class HighEffortAIWorkflow {
         if (this.state == State.GENERATING || this.state == State.PLANNING) {
             this.state = State.PAUSED;
             Litematica.logger.info("AI Workflow PAUSED at part {}/{}", completedPartsCount.get(), (partsPlan == null ? "?" : partsPlan.size()));
-            for (CompletableFuture<HttpResponse<String>> future : this.activeFutures) {
+            for (CompletableFuture<String> future : this.activeFutures) {
                 future.cancel(true);
             }
             this.activeFutures.clear();
@@ -337,7 +318,7 @@ public class HighEffortAIWorkflow {
     public void abort() {
         this.state = State.IDLE;
         Litematica.logger.info("AI Workflow ABORTED manually.");
-        for (CompletableFuture<HttpResponse<String>> future : this.activeFutures) {
+        for (CompletableFuture<String> future : this.activeFutures) {
             future.cancel(true);
         }
         this.activeFutures.clear();
@@ -383,38 +364,5 @@ public class HighEffortAIWorkflow {
     
     public State getState() {
         return this.state;
-    }
-
-    private CompletableFuture<HttpResponse<String>> sendApiRequest(String userText, String model, String systemOvr) {
-        String apiKey = Configs.Generic.OPENAI_API_KEY.getStringValue();
-        Litematica.logger.info("Sending API Request to OpenAI (Model: {})", model);
-        
-        JsonObject payload = new JsonObject();
-        payload.addProperty("model", model);
-        
-        JsonArray messages = new JsonArray();
-        if (systemOvr != null) {
-            JsonObject sys = new JsonObject();
-            sys.addProperty("role", "system");
-            sys.addProperty("content", systemOvr);
-            messages.add(sys);
-        }
-        
-        JsonObject usr = new JsonObject();
-        usr.addProperty("role", "user");
-        usr.addProperty("content", userText);
-        messages.add(usr);
-        
-        payload.add("messages", messages);
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.openai.com/v1/chat/completions"))
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
-                .build();
-
-        return client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
     }
 }
