@@ -1,0 +1,20 @@
+# High-Capacity LoRA Config for 3D Spatial Logic
+lora_parameters:
+  rank: 128 # High capacity to overwrite pre-trained coding habits
+  alpha: 256
+  dropout: 0.05
+  scale: 10.0
+
+# Targeting all critical layers for logic
+lora_layers: 16
+
+# Training settings
+batch_size: 1
+iters: 1000
+grad_accumulation_steps: 8
+learning_rate: 2e-5
+max_seq_length: 3000
+mask_prompt: true 
+grad_checkpoint: true
+repetition_penalty: 1.2
+save_every: 100 # Save progress every 100 steps

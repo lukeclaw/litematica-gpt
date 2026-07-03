@@ -1,0 +1,4 @@
+Starting Gemma 4 E4B 'Native Thinking' Training Path...
+Loading Base Model: mlx-community/gemma-4-e4b-it-4bit
+Fetching 8 files:   0%|          | 0/8 [00:00<?, ?it/s]Fetching 8 files:  12%|█▎        | 1/8 [00:00<00:03,  1.85it/s]Fetching 8 files:  25%|██▌       | 2/8 [00:00<00:02,  2.58it/s]/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

@@ -1,0 +1,224 @@
+palette
+A = minecraft:dirt
+B = minecraft:grass_block
+C = minecraft:stone_slab
+D = minecraft:oak_planks
+E = minecraft:stone
+F = minecraft:oak_leaves
+G = minecraft:oak_log
+H = minecraft:chest
+I = minecraft:torch
+J = minecraft:furnace
+K = minecraft:cobblestone
+L = minecraft:crafting_table
+M = minecraft:bookshelf
+. = minecraft:air
+end_palette
+layer_y 0 0 0
+AABBBBBBBBCCBBBB
+AABBBBBABACCABAB
+ABBBBBBBAACCAABB
+BBBBBBBBADDDDABB
+BBBBBBBBADDDDAAB
+BABBABBAADDDDABB
+BBAAAADAAADDAABB
+BAADDDEDDDDDDAAB
+BBADEDDDDDDDDABB
+BBADDDDDDDDDDABB
+BBADEDDDDDDDDABB
+BAADDDEDDDEDDAAB
+BBAAAADAAADAAABB
+BABABBBABABBABAB
+end_layer
+layer_y 1 0 0
+BB..E.EEEF..FEE.
+BBEEEEEGEG..G.GE
+BEEEEEE.DDEEDD..
+.E..EEE.D...HD.E
+EE..EEE.D...EDGE
+EG.EG..GD...HDEE
+EEDDDDDDDD..DDEE
+EGDEE.EED..EGDGE
+..DEE.......ED.E
+E.D..........D.E
+EEDEE.......ED..
+EGDEE.EEDEEEGDGE
+E.DDDDDDDDDDDD.E
+.G.G.E.G.GEEG.GE
+end_layer
+layer_y 2 0 0
+EE..............
+EE.....G.G..G.G.
+E.......EEEEEE..
+........E....E..
+........E...EEG.
+.G..G..GE....E..
+..EEEEEEEE..EE..
+.GE.....E...FEG.
+..E..........E..
+..E..........E..
+..E..........E..
+.GE.....E...FEG.
+..EEEEEEEEEEEE..
+.G.G...G.G..G.G.
+end_layer
+layer_y 3 0 0
+................
+.......G.G..G.G.
+........EEEEEE..
+........E....E..
+........E...EEG.
+.G..G..GEI..IE..
+..EEEEEEEEEEEE..
+.GEI...IEI..FEG.
+..E..........E..
+..E..........E..
+..E..........E..
+.GEI...IEI..FEG.
+..EEEEEEEEEEEE..
+.G.G...G.G..G.G.
+end_layer
+layer_y 4 0 0
+................
+.......GGGGGGGG.
+.......GDDDDDDG.
+.......GDDDDDDG.
+.......GDDDDEDG.
+.GGGGGGGDDDDDDG.
+.GDDDDDDDDDDDDG.
+.GDDDDDDDDDDDDG.
+.GDDDDDDDDDDDDG.
+.GDDDDDDDDDDDDG.
+.GDDDDDDDDDDDDG.
+.GDDDDDDDDDDDDG.
+.GDDDDDDDDDDDDG.
+.GGGGGGGGGGGGGG.
+end_layer
+layer_y 5 0 0
+................
+.......G......G.
+........DDDDDD..
+........DJ..HD..
+........DJ..ED..
+.G..G..GKK..KKG.
+..DDDDDLHH..HD..
+..DEE.......HD..
+..DH.........D..
+..DH.E.MEE...D..
+..DM...MEE..HD..
+..DMMMMMEE..HD..
+..DDDDDDDDDDDD..
+.G.....G.G....G.
+end_layer
+layer_y 6 0 0
+................
+.......G......G.
+........DDEEDD..
+........DE...D..
+........DE...D..
+.G..G..GGK..KGG.
+..DDDDD......D..
+..D..........D..
+..E..........E..
+..E....M.....E..
+..EM...M.....E..
+..DMMMMM.....D..
+..DDDDDDDDDDDD..
+.G.....G.G....G.
+end_layer
+layer_y 7 0 0
+.......EE....EE.
+.......EG....GE.
+.......EKDEEDKE.
+.......EK....KE.
+.......EK....KE.
+KKKKKKKKGGGGGGKK
+.GKKKKKKKKKKKKG.
+..D..........D..
+..E..........E..
+..E....E.....E..
+..E..........E..
+..DE...E.....D..
+.GKKKKKKKKKKKKG.
+KKKKKKKKKKKKKKKK
+end_layer
+layer_y 8 0 0
+........EE..EE..
+........EG..GE..
+........EKDDKE..
+........EKGGKE..
+........EKGGKE..
+EEEEEEEEEGGGGEEE
+EGKKKKKKKKKKKDGE
+..D..........D..
+..D..........D..
+..DI........ID..
+..D..........D..
+..D..........D..
+EGKKKKKKKKKKKKGE
+EEEEEEEEEEEEEEEE
+end_layer
+layer_y 9 0 0
+.........EEEE...
+.........EGGE...
+.........EGGE...
+.........EGGE...
+.........EGGE...
+.........EGGE...
+EEEEEEEEEEGGEEEE
+EGKKKKKKKKKKKKGE
+..D..........D..
+..D..........D..
+..D..........D..
+EGKKKKKKKKKKKKGE
+EEEEEEEEEEEEEEEE
+................
+end_layer
+layer_y 10 0 0
+..........CC....
+..........CC....
+..........CC....
+..........CC....
+..........CC....
+..........CC....
+..........CC....
+EEEEEEEEEEEEEEEE
+EGKKKKKKKKKKKKGE
+..D..........D..
+EGKKKKKKKKKKKKGE
+EEEEEEEEEEEEEEEE
+................
+................
+end_layer
+layer_y 11 0 0
+................
+................
+................
+................
+................
+................
+................
+................
+EEEEEEEEEEEEEEEE
+CGGGGGGGGGGGGGGC
+EEEEEEEEEEEEEEEE
+................
+................
+................
+end_layer
+layer_y 12 0 0
+................
+................
+................
+................
+................
+................
+................
+................
+................
+CCCCCCCCCCCCCCCC
+................
+................
+................
+................
+end_layer
