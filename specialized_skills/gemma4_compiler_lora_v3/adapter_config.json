@@ -1,0 +1,10 @@
+{
+    "model": "mlx-community/gemma-4-e4b-it-4bit",
+    "num_layers": 32,
+    "lora_parameters": {
+        "rank": 128,
+        "alpha": 256,
+        "dropout": 0,
+        "scale": 2.0
+    }
+}
