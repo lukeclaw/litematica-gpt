@@ -54,8 +54,10 @@ evidence remains in `ml_workspace/data/processed/`:
 Adapter weights (0.6–2.5 GB each) are **too large for git** and are published as
 **GitHub Release assets** — one release per fine-tune, so the history is visible on the
 [Releases page](https://github.com/lukeclaw/litematica-gpt/releases). Only **final adapters** are
-uploaded (not every intermediate checkpoint); the loss/step progression is preserved in the
-committed training logs under `ml_workspace/logs_and_runs/`.
+uploaded (not every intermediate checkpoint). How far each run trained — and the custom weighted
+structural loss behind it — is documented in [`docs/training-progression.md`](docs/training-progression.md).
+(Raw per-step loss was streamed to the remote GPU console and not archived here; the progression is
+reconstructed from on-disk checkpoint milestones and configs.)
 
 Download an `adapters.safetensors` and place it next to its committed `adapter_config.json`, e.g.:
 

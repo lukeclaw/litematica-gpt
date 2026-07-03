@@ -78,7 +78,7 @@ visible.
 src/                  Java source for the mod (Litematica + AI feature under
                       src/.../schematic/ai/ and gui/GuiOpenAISchematic.java)
 tools/                Standalone developer utilities (not part of the mod build)
-docs/                 ML architecture + ThunderCompute training/deployment guides
+docs/                 ML architecture, training progression, ThunderCompute guides
 ml_workspace/         The ML research project:
     scripts/            data prep, training, evaluation, utilities
     setup_and_configs/  LoRA configs + environment setup
