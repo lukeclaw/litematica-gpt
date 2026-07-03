@@ -92,7 +92,11 @@ public class HighEffortAIWorkflow {
                                "If parts physically intersect (like a leg joining a torso), explicitly define identical 'connections' interface coordinates in *both* intersecting parts so they fuse properly.\n" +
                                "Example:\n{\n \"global_bounds\": [0,64,0, 80,90,50],\n \"global_palette\": {\"wall_material\": \"minecraft:stone_bricks\", \"accent\": \"minecraft:polished_andesite\"},\n \"parts\": [\n  {\"name\": \"Base Foundation\", \"bounds\": [0,64,0, 80,68,50], \"instructions\": \"Build a solid foundation out of stone_bricks.\", \"connections\": [{\"name\": \"support_struts\", \"coord\": \"[20,68,20], [60,68,20]\"}]},\n  {\"name\": \"Main Superstructure\", \"bounds\": [5,68,5, 75,90,45], \"instructions\": \"Build the main body with detail\", \"connections\": [{\"name\": [\"support_struts\"], \"coord\": [\"[20,68,20], [60,68,20]\"]}]}\n ]\n}\n\nRequest: " + prompt;
 
-        CompletableFuture<String> plannerFuture = AIIntegration.generate(plannerPrompt, null);
+        String plannerModelId = (Configs.Generic.AI_PROVIDER.getOptionListValue() == fi.dy.masa.litematica.util.AIProvider.GEMINI)
+                ? Configs.Generic.GEMINI_PLANNER_MODEL_ID.getStringValue()
+                : Configs.Generic.OPENAI_PLANNER_MODEL_ID.getStringValue();
+
+        CompletableFuture<String> plannerFuture = AIIntegration.generate(plannerPrompt, null, plannerModelId);
         this.activeFutures.add(plannerFuture);
         
         plannerFuture.thenAccept(content -> {
@@ -244,7 +248,11 @@ public class HighEffortAIWorkflow {
             "HARD CONSTRAINT: You MUST NOT place any blocks outside your LOCAL [0,0,0] to [W-1,H-1,D-1] canvas.\n" +
             "NEVER output 'size', 'slice', or markdown. Output raw plaintext script ONLY. Use `.` for explicit air.";
 
-        CompletableFuture<String> future = AIIntegration.generate(originalPrompt, systemInstruction);
+        String modelId = (Configs.Generic.AI_PROVIDER.getOptionListValue() == fi.dy.masa.litematica.util.AIProvider.GEMINI)
+                ? Configs.Generic.GEMINI_WORKER_MODEL_ID.getStringValue()
+                : Configs.Generic.OPENAI_WORKER_MODEL_ID.getStringValue();
+
+        CompletableFuture<String> future = AIIntegration.generate(originalPrompt, systemInstruction, modelId);
         this.activeFutures.add(future);
 
         future.thenAccept(script -> {

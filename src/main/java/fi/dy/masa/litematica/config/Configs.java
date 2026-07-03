@@ -50,11 +50,14 @@ public class Configs implements IConfigHandler
         public static final ConfigString        COMMAND_NAME_SUMMON         = new ConfigString( "commandNameSummon", "summon", "litematica.config.generic.comment.commandNameSummon").translatedName("litematica.config.generic.name.commandNameSummon");
         
         public static final ConfigString        OPENAI_API_KEY              = new ConfigString( "openAiApiKey", "", "litematica.config.generic.comment.openAiApiKey").translatedName("litematica.config.generic.name.openAiApiKey");
+        public static final ConfigString        OPENAI_WORKER_MODEL_ID      = new ConfigString( "openAiWorkerModelId", "gpt-4o-mini", "litematica.config.generic.comment.openAiWorkerModelId").translatedName("litematica.config.generic.name.openAiWorkerModelId");
+        public static final ConfigString        OPENAI_PLANNER_MODEL_ID     = new ConfigString( "openAiPlannerModelId", "gpt-5.4-mini", "litematica.config.generic.comment.openAiPlannerModelId").translatedName("litematica.config.generic.name.openAiPlannerModelId");
         public static final ConfigOptionList    AI_PROVIDER                 = new ConfigOptionList("aiProvider", AIProvider.OPENAI, "litematica.config.generic.comment.aiProvider").translatedName("litematica.config.generic.name.aiProvider");
         public static final ConfigString        GEMINI_API_KEY              = new ConfigString( "geminiApiKey", "", "litematica.config.generic.comment.geminiApiKey").translatedName("litematica.config.generic.name.geminiApiKey");
         public static final ConfigString        GEMINI_PROJECT_ID           = new ConfigString( "geminiProjectId", "", "litematica.config.generic.comment.geminiProjectId").translatedName("litematica.config.generic.name.geminiProjectId");
         public static final ConfigString        GEMINI_LOCATION             = new ConfigString( "geminiLocation", "us-central1", "litematica.config.generic.comment.geminiLocation").translatedName("litematica.config.generic.name.geminiLocation");
-        public static final ConfigString        GEMINI_MODEL_ID             = new ConfigString( "geminiModelId", "gemini-1.5-flash-001", "litematica.config.generic.comment.geminiModelId").translatedName("litematica.config.generic.name.geminiModelId");
+        public static final ConfigString        GEMINI_WORKER_MODEL_ID      = new ConfigString( "geminiWorkerModelId", "gemini-1.5-flash-001", "litematica.config.generic.comment.geminiWorkerModelId").translatedName("litematica.config.generic.name.geminiWorkerModelId");
+        public static final ConfigString        GEMINI_PLANNER_MODEL_ID     = new ConfigString( "geminiPlannerModelId", "gemini-2.5-flash", "litematica.config.generic.comment.geminiPlannerModelId").translatedName("litematica.config.generic.name.geminiPlannerModelId");
         
         public static final ConfigString        AI_FALLBACK_BLOCK           = new ConfigString( "aiFallbackBlock", "minecraft:stone", "litematica.config.generic.comment.aiFallbackBlock").translatedName("litematica.config.generic.name.aiFallbackBlock");
         public static final ConfigInteger       COMMAND_TASK_INTERVAL       = new ConfigInteger("commandTaskInterval", 1, 1, 1000, "litematica.config.generic.comment.commandTaskInterval").translatedName("litematica.config.generic.name.commandTaskInterval");
@@ -170,10 +173,13 @@ public class Configs implements IConfigHandler
                 COMMAND_NAME_SUMMON,
                 OPENAI_API_KEY,
                 AI_PROVIDER,
+                OPENAI_WORKER_MODEL_ID,
+                OPENAI_PLANNER_MODEL_ID,
                 GEMINI_API_KEY,
                 GEMINI_PROJECT_ID,
                 GEMINI_LOCATION,
-                GEMINI_MODEL_ID,
+                GEMINI_WORKER_MODEL_ID,
+                GEMINI_PLANNER_MODEL_ID,
                 AI_FALLBACK_BLOCK,
                 COMMAND_TASK_INTERVAL,
                 CUSTOM_SCHEMATIC_BASE_DIRECTORY,

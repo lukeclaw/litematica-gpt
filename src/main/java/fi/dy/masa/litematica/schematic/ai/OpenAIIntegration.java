@@ -16,13 +16,18 @@ public class OpenAIIntegration {
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
 
     public static CompletableFuture<String> generateRaw(String prompt, String systemInstruction) {
+        return generateRaw(prompt, systemInstruction, null);
+    }
+
+    public static CompletableFuture<String> generateRaw(String prompt, String systemInstruction, String modelId) {
         String apiKey = Configs.Generic.OPENAI_API_KEY.getStringValue();
         if (apiKey == null || apiKey.isEmpty()) {
             return CompletableFuture.failedFuture(new IllegalStateException("OpenAI API Key is not configured!"));
         }
 
+        String targetModelId = (modelId != null && !modelId.isEmpty()) ? modelId : Configs.Generic.OPENAI_WORKER_MODEL_ID.getStringValue();
         JsonObject payload = new JsonObject();
-        payload.addProperty("model", "gpt-5.4-mini");
+        payload.addProperty("model", targetModelId);
         
         JsonArray messages = new JsonArray();
         

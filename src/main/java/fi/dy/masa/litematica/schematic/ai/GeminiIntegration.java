@@ -14,23 +14,40 @@ import java.util.concurrent.CompletableFuture;
 
 public class GeminiIntegration {
 
-    public static CompletableFuture<String> generateContent(String prompt, String systemInstruction) {
-        String apiKey = Configs.Generic.GEMINI_API_KEY.getStringValue();
-        String projectId = Configs.Generic.GEMINI_PROJECT_ID.getStringValue();
-        String location = Configs.Generic.GEMINI_LOCATION.getStringValue();
-        String modelId = Configs.Generic.GEMINI_MODEL_ID.getStringValue();
+    public static CompletableFuture<String> generateContent(String prompt, String systemInstruction, String modelId) {
+        String apiKey = Configs.Generic.GEMINI_API_KEY.getStringValue().trim();
+        String projectId = Configs.Generic.GEMINI_PROJECT_ID.getStringValue().trim();
+        String location = Configs.Generic.GEMINI_LOCATION.getStringValue().trim();
+        modelId = modelId.trim();
 
-        if (apiKey.isEmpty() || projectId.isEmpty()) {
-            return CompletableFuture.failedFuture(new IllegalStateException("Gemini API Key and Project ID must be configured for Vertex AI!"));
+        if (apiKey.isEmpty() || (projectId.isEmpty() && !modelId.startsWith("projects/"))) {
+            return CompletableFuture.failedFuture(new IllegalStateException("Gemini Bearer Token and Project ID must be configured for Vertex AI!"));
         }
 
         // Vertex AI URL format
         // Standard models: publishers/google/models/{modelId}
-        // Tuned models: tunedModels/{modelId}
-        String modelPath = modelId.startsWith("tunedModels/") ? modelId : "publishers/google/models/" + modelId;
-        
-        String url = String.format("https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/%s:generateContent",
-                location, projectId, location, modelPath);
+        // Tuned models: tunedModels/{modelId} OR models/{modelId}
+        String modelPath;
+        if (modelId.startsWith("tunedModels/") || modelId.startsWith("projects/") || modelId.startsWith("models/")) {
+            modelPath = modelId;
+        } else if (modelId.matches("\\d+")) {
+            // Vertex AI Model Registry path
+            modelPath = "models/" + modelId;
+        } else {
+            modelPath = "publishers/google/models/" + modelId;
+        }
+
+        String url;
+        if (modelPath.startsWith("projects/")) {
+            url = String.format("https://%s-aiplatform.googleapis.com/v1/%s:generateContent", 
+                    location, modelPath);
+        } else {
+            url = String.format("https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/%s:generateContent",
+                    location, projectId, location, modelPath);
+        }
+
+        // VERBOSE LOGGING - Check this in your Minecraft Console!
+        Litematica.logger.info(">>> GEMINI REQUEST URL: {}", url);
 
         JsonObject payload = new JsonObject();
         
@@ -76,7 +93,7 @@ public class GeminiIntegration {
         return client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     if (response.statusCode() != 200) {
-                        Litematica.logger.error("Gemini API Error: HTTP {} - {}", response.statusCode(), response.body());
+                        Litematica.logger.error("Gemini API Error: HTTP {} - URL: {} - Response: {}", response.statusCode(), url, response.body());
                         throw new RuntimeException("Gemini API returned status code " + response.statusCode() + ": " + response.body());
                     }
                     
@@ -87,7 +104,7 @@ public class GeminiIntegration {
                                 .getAsJsonObject("content").getAsJsonArray("parts").get(0).getAsJsonObject()
                                 .get("text").getAsString();
                     } catch (Exception e) {
-                        Litematica.logger.error("Failed to parse Gemini response", e);
+                        Litematica.logger.error("Failed to parse Gemini response. Body: {}", response.body(), e);
                         throw new RuntimeException("Failed to parse Gemini response: " + e.getMessage());
                     }
                 });
