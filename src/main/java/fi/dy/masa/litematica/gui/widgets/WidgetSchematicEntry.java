@@ -50,6 +50,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
         int posX = x + width;
 
         posX -= this.addButton(posX, y, ButtonListener.Type.UNLOAD);
+        posX -= this.addButton(posX, y, ButtonListener.Type.REVERSE_TO_DSL);
         posX -= this.addButton(posX, y, ButtonListener.Type.RELOAD);
         posX -= this.addButton(posX, y, ButtonListener.Type.SAVE_TO_FILE);
         posX -= this.addButton(posX, y, ButtonListener.Type.CREATE_PLACEMENT);
@@ -201,6 +202,12 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
                 SchematicPlacementManager manager = DataManager.getSchematicPlacementManager();
                 manager.getAllPlacementsOfSchematic(this.widget.schematic).forEach(manager::markChunksForRebuild);
             }
+            else if (this.type == Type.REVERSE_TO_DSL)
+            {
+                String dsl = fi.dy.masa.litematica.schematic.ai.OpenAISchematicDSLReverser.reverse(this.widget.schematic);
+                System.out.println("=== DSL REVERSE OUTPUT START ===\n" + dsl + "\n=== DSL REVERSE OUTPUT END ===");
+                fi.dy.masa.malilib.util.InfoUtils.showGuiOrInGameMessage(fi.dy.masa.malilib.gui.Message.MessageType.SUCCESS, "DSL printed to console");
+            }
             else if (this.type == Type.UNLOAD)
             {
                 SchematicHolder.getInstance().removeSchematic(this.widget.schematic);
@@ -213,6 +220,7 @@ public class WidgetSchematicEntry extends WidgetListEntryBase<LitematicaSchemati
             CREATE_PLACEMENT    ("litematica.gui.button.create_placement"),
             RELOAD              ("litematica.gui.button.reload", "litematica.gui.button.hover.schematic_list.reload_schematic"),
             SAVE_TO_FILE        ("litematica.gui.button.save_to_file"),
+            REVERSE_TO_DSL      ("litematica.gui.button.reverse_to_dsl", "litematica.gui.button.hover.schematic_list.reverse_to_dsl"),
             UNLOAD              ("litematica.gui.button.unload");
 
             private final String translationKey;

@@ -1,0 +1,144 @@
+palette
+A = minecraft:stone
+B = minecraft:white_wool
+C = minecraft:iron_block
+D = minecraft:grass_block
+E = minecraft:dirt
+. = minecraft:air
+end_palette
+layer_y 0 0 0
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+end_layer
+layer_y 1 0 0
+.............A
+A............A
+A............A
+A....AABBAA..A
+AA...A.BB.A..A
+AA...CBBBBC..A
+AAA..AA..AA...
+AA.ACAA..AAAA.
+AAAA.AA..AA...
+AA...CCBBCC...
+AAA..A.BB.A...
+AAA..AABBAA...
+AAAA..........
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+end_layer
+layer_y 2 0 0
+.............A
+A............A
+A............A
+A......AA....A
+AA.....AA....A
+AAA..AAAAAA.AA
+AAA...........
+AA.C........A.
+AAA...........
+AA...AAAAAA...
+AAA....AA.....
+AAA....AA.....
+AAAA...AA.....
+AAAAAAACCAAAAA
+AAAAAAACCAAAAA
+end_layer
+layer_y 3 0 0
+.AAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AAAAAAAAAAAAAA
+AACCC..CC..CCC
+AACCCC.CC...CC
+AAA....CC.AA.A
+AAAA...CCCA.A.
+CCA....CCAA..A
+CCA....CCAAA.A
+DDE....CCEEE.E
+DDE....CCEEEEE
+DDEEEEECCEEEEE
+DDEEEECCCCEEEE
+DDCCCCCCCCCCCC
+end_layer
+layer_y 4 0 0
+..............
+..............
+..............
+..............
+..CCCCC..CCCCC
+..CCCCCAACCCCC
+..CC.CC..CCCCC
+..CCCAACCAAAAC
+CCC...C..CC..C
+CCC...CAACCC.C
+..C...C..CCCCC
+..CCCCC..CCCCC
+..CCCCC..CCCCC
+..CCCCC..CCCCC
+..............
+end_layer
+layer_y 5 0 0
+..............
+..............
+..............
+..............
+..CCCCC..CCCCC
+..CCCCC..CCCCC
+..CC.CC..CCCCC
+..CAAAACCAAAAC
+CCC...C..CC..C
+CCC...C..CCCCC
+..C...C..C..CC
+..CCCCC..CCCCC
+..CCCCC..CCCCC
+..CCCCC..CCCCC
+..............
+end_layer
+layer_y 6 0 0
+..............
+..............
+..............
+..............
+..CCCCCCCCCCCC
+..CCCCCCCCCCCC
+..CCCCCCCCCCCC
+..CCCCCCCCCCCC
+CCCCCCCCCCCCCC
+CCCCCCCCCCCCCC
+..CCCCCCCCCCCC
+..CCCCCCCCCCCC
+..CCCCCCCCCCCC
+..CCCCCCCCCCCC
+..............
+end_layer
+layer_y 7 0 0
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+..............
+.............A
+end_layer

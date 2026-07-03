@@ -1,3 +1,4 @@
+# --- Java / Gradle build ---
 .gradle
 .settings
 bin/
@@ -10,3 +11,51 @@ build.number
 .idea/
 run/
 libs/
+
+# --- OS / editor junk ---
+.DS_Store
+*.swp
+
+# --- Secrets & credentials (never commit) ---
+tnr_key_god
+*.pem
+*.key
+.gemini/
+
+# --- Python envs ---
+venv/
+god_venv/
+__pycache__/
+*.pyc
+
+# ===================================================================
+# ML workspace: this repo tracks the *research process* — scripts,
+# configs, docs, processed training data, and a raw-data sample.
+# Only the heavy binaries below are excluded; see MODELS.md for where
+# the trained weights and full datasets live (GitHub Releases).
+# ===================================================================
+
+# Model weights / adapters (published as Releases, not committed)
+*.safetensors
+*.safetensors.*
+*.npz
+*.bin
+*.gguf
+*.pt
+*.pth
+
+# Full raw scraped corpus (10 GB); a small sample is committed under
+# ml_workspace/data/sample/ instead. (Also a duplicate dump under the logs dir.)
+ml_workspace/data/raw/
+ml_workspace/logs_and_runs/pc_training/data/dsl/
+
+# Multi-GB training bundles / dataset archives
+ml_workspace/data/archives/
+*.zip
+
+# Minecraft dev-runtime world copy captured under the logs dir
+ml_workspace/logs_and_runs/run/
+*.mca
+*.dat
+*.dat_old
+*.litematic

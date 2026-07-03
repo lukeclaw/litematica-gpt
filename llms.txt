@@ -1,0 +1,13 @@
+# Litematica-GPT
+
+This repository combines a Java Litematica mod with a Python ML pipeline for Gemma 4.
+
+## Core Resources
+- [AGENTS.md](AGENTS.md): Main agent instructions and project overview.
+- [ml_workspace/](ml_workspace/AGENTS.md): The Machine Learning workspace.
+- [src/](src/): Java source for the Litematica mod.
+
+## ML Pipeline
+- [scripts/](ml_workspace/scripts/AGENTS.md): Data prep, training, and evaluation scripts.
+- [data/](ml_workspace/data/AGENTS.md): Raw and processed datasets.
+- [models/](ml_workspace/models_and_adapters/AGENTS.md): LoRA adapters and model artifacts.

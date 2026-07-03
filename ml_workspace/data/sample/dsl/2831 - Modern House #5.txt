@@ -1,0 +1,170 @@
+palette
+A = minecraft:grass_block
+B = minecraft:dirt
+C = minecraft:quartz_block
+D = minecraft:white_wool
+E = minecraft:stone_slab
+F = minecraft:stone
+G = minecraft:glass
+. = minecraft:air
+end_palette
+layer_y 0 0 0
+AAAAAABABA
+ABCCCBBBBB
+BBDDDDDDBB
+ACDDDDDDDC
+ACDDDDDDDC
+BBDDDDDDDC
+ACDDDDDDBB
+ACDDDBBBBB
+BBDDDBEEEE
+ACDDDBEEEE
+ACDDDDEEEE
+BBDDDBEEEE
+ABCCCBBCBB
+AAAAAABABA
+end_layer
+layer_y 1 0 0
+......F.F.
+.CFFFCCCCF
+FC...C..CC
+.G...F...F
+.G...F...F
+FC...F...F
+.G...C..CC
+.G...CCCCF
+FCF..C....
+.G...F....
+.G...F....
+FC...F....
+.CFFFCCGCC
+......F.F.
+end_layer
+layer_y 2 0 0
+......F.F.
+.CFFFCCCCF
+FC...C..CC
+.G...F...F
+.G...F...F
+FC...F...F
+.G...C..CC
+.GF..CCCCF
+FC...C....
+.G...F....
+.G...F....
+FC...F....
+.CFFFCCGCC
+......F.F.
+end_layer
+layer_y 3 0 0
+......F.F.
+.CFFFCCCCF
+FC...C..CC
+.G...F...F
+.G...F...F
+FC...F...F
+.GF..C..CC
+.G...CCCCF
+FC...C....
+.G...F....
+.G...F....
+FC...F....
+.CFFFCCGCC
+......F.F.
+end_layer
+layer_y 4 0 0
+......F.F.
+.CCCCCCCCF
+FCDDDDDDCC
+.GDDDDDDDC
+.GDDDDDDDC
+FCFDDDDDDC
+.G.DDDDDCC
+.G.DDDDDCF
+FC.DDDDDDC
+.GDDDDDDDC
+.GDDDDDDDC
+FCDDDDDDDC
+.CCCCCCGCC
+......F.F.
+end_layer
+layer_y 5 0 0
+......F.F.
+.CFFFCCCCF
+FC...C..CC
+.G...C...F
+.G...F...F
+FC.F.C...F
+.G.F.C..CC
+.G.F.CCCCF
+FC.F.C..CC
+.GFF.F...F
+.G...F...F
+FC...C...F
+.CFFFCCGCC
+......F.F.
+end_layer
+layer_y 6 0 0
+......F.F.
+.CFFFCCCCF
+FC...C..CC
+.G...C...F
+.G...F...F
+FC...C...F
+.G...C..CC
+.G...CCCCF
+FC...C..CC
+.G...F...F
+.G...F...F
+FC...C...F
+.CFFFCCGCC
+......F.F.
+end_layer
+layer_y 7 0 0
+......F.F.
+.CFFFCCCCF
+FC...C..CC
+.G...C...F
+.G...C...F
+FC...C...F
+.G...C..CC
+.G...CCCCF
+FC...C..CC
+.G...C...F
+.G...C...F
+FC...C...F
+.CFFFCCGCC
+......F.F.
+end_layer
+layer_y 8 0 0
+......F.F.
+.CCCCCCCCF
+FCCCCCCCCC
+.GGGGCCCCC
+.GGGGCCCCC
+FCCCCCCCCC
+.GGGGCCCCC
+.GGGGCFCCF
+FCCCCCCCCC
+.GGGGCCCCC
+.GGGGCCCCC
+FCCCCCCCCC
+.CCCCCCGCC
+......F.F.
+end_layer
+layer_y 9 0 0
+......F.F.
+......F.F.
+FFFFFFFFF.
+......F.F.
+......F.F.
+FFFFFFFFF.
+......F.F.
+......F.F.
+FFFFFFFFF.
+......F.F.
+......F.F.
+FFFFFFFFF.
+......F.F.
+......F.F.
+end_layer
